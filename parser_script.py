@@ -16,6 +16,8 @@ l = Lark(gram,start="main")
 
 #The code is parsed
 
+cpt_if_while = [-1]
+
 def pp_expression(ast):
     
     if ast.data in  ( "variable" , "int"  ):
@@ -215,28 +217,36 @@ def asm_command(ast):
         script = asm_command(ast.children[0].children[1])
         script_else = asm_command(ast.children[1].children[0])
 
+        cpt_if_while[0] += 1
+
         return f"""
         {test}
         cmp rax, 0
-        jz end
+        jz end_{cpt_if_while[0]}
         {script}
-        jmp end_else
-        end:
+        jmp end_else_{cpt_if_while[0]}
+        end_{cpt_if_while[0]}:
         {script_else}
-        end_else:
+        end_else_{cpt_if_while[0]}:
+        """
+
+    if ast.data == "pass":
+        return """nop
         """
         
     if ast.data == "while":        
         test = asm_expression(ast.children[0])
         script = asm_command(ast.children[1])
+        cpt_if_while[0] += 1
+
         return  f"""
-        while:
+        while_{cpt_if_while[0]}:
             {test}
             cmp rax, 0
-            jz end_while
+            jz end_while_{cpt_if_while[0]}
             {script}
-            jmp while
-        end_while:
+            jmp while_{cpt_if_while[0]}
+        end_while_{cpt_if_while[0]}:
         """
 
     if ast.data == "print":
@@ -244,12 +254,14 @@ def asm_command(ast):
             if ast.children[0].children[0] == "str":
                 return f"""
                     mov rdi, {ast.children[1].children[0]}
+                    xor rax, rax
                     call printf
                 """
             elif ast.children[0].children[0] == "int" :
                 return f"""
                     mov rdi, asm_int_prtr
                     mov rsi, [{ast.children[1].children[0]}]
+                    xor rax, rax
                     call printf
                 """
         else : 
@@ -260,31 +272,19 @@ def asm_command(ast):
                 return stret + f"""
                     mov rdi, asm_int_prtr
                     mov rsi, rax
+                    xor rax, rax
                     call printf
                 """
-
-
-    if ast.data == "main":
-        script = asm_command(ast.children[1])
-        returned = asm_expression(ast.children[2].children[0])
-        return f"""
-        main:
-        push rbp            
-        mov rbp, rsp
-        {script}
-    
-        """
-
     
     if ast.data == "function_call":
-        print(ast)
+        # print(ast)
         return f"""
             call {ast.children[0].children[0]}
         """
 
-    
-    
     return "Wrong or not implemented"
+
+
     
 def asm_func(ast):
     
@@ -317,6 +317,28 @@ def asm_func(ast):
             pop rbp     
             ret
             """
+
+def asm_main(ast):
+
+    if ast.data == "main":
+        # print(ast.children[0])
+        script = asm_command(ast.children[1])
+        returned = asm_expression(ast.children[2].children[0])
+        return f"""
+        main:
+        push rbp            
+        mov rbp, rsp
+        {script}
+        
+        mov rdi, asm_ret_msg
+        xor rax, rax
+        call printf
+        pop rbp
+        ret
+        """
+    
+    
+    return "Wrong or not implemented"
     
 def assembly(script):
     vars = []
@@ -339,15 +361,9 @@ def assembly(script):
         asm_script += asm_func(t)
 
 
-    asm_script += asm_command(t)
+    asm_script += asm_main(t)
     
 
-    asm_script += """
-    mov rdi, asm_ret_msg
-    call printf
-    pop rbp
-    ret
-    """    
     # print(asm_command(t))
     print(asm_script)
     with open("tuto_assembly/test.asm", "w") as f:

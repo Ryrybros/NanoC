@@ -12,6 +12,12 @@ main(x){
         print(str, endl);
         x = x - 1 ;    
     }
+    if (x) {
+        print(int, x+100);
+    }
+    else {
+        print(int, x+200);
+    }
     return 0; 
 }
 

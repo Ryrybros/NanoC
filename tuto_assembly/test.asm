@@ -28,6 +28,7 @@ endl : db " ",10," ", 0
             
                     mov rdi, asm_int_prtr
                     mov rsi, [rbp - 8]
+                    xor rax, rax
                     call printf
                 
             mov rax, [rbp - 8]
@@ -42,9 +43,10 @@ endl : db " ",10," ", 0
             call hello
         
                     mov rdi, s
+                    xor rax, rax
                     call printf
                 
-        while:
+        while_0:
              
         mov rax, 0
         push rax
@@ -55,13 +57,15 @@ endl : db " ",10," ", 0
         movzx rax, al
     
             cmp rax, 0
-            jz end_while
+            jz end_while_0
             
                     mov rdi, asm_int_prtr
                     mov rsi, [x]
+                    xor rax, rax
                     call printf
                 
                     mov rdi, endl
+                    xor rax, rax
                     call printf
                 
                      
@@ -74,13 +78,46 @@ endl : db " ",10," ", 0
     
                     mov [x] , rax
             
-            jmp while
-        end_while:
+            jmp while_0
+        end_while_0:
+        
+        mov rax, [x]
+        cmp rax, 0
+        jz end_1
+         
+        mov rax, 100
+        push rax
+        mov rax, [x]
+        pop rbx
+        add rax, rbx
         
     
+                    mov rdi, asm_int_prtr
+                    mov rsi, rax
+                    xor rax, rax
+                    call printf
+                
+        jmp end_else_1
+        end_1:
+         
+        mov rax, 200
+        push rax
+        mov rax, [x]
+        pop rbx
+        add rax, rbx
         
-    mov rdi, asm_ret_msg
-    call printf
-    pop rbp
-    ret
     
+                    mov rdi, asm_int_prtr
+                    mov rsi, rax
+                    xor rax, rax
+                    call printf
+                
+        end_else_1:
+        
+        
+        mov rdi, asm_ret_msg
+        xor rax, rax
+        call printf
+        pop rbp
+        ret
+        
