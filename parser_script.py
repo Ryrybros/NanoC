@@ -1,5 +1,5 @@
 import os
-from lark import Lark
+import lark
 
 path = "cours_script"
 grammar_path = "cours_grammar"
@@ -10,7 +10,7 @@ with open(grammar_path) as f:
 
 gram = f''' {grammar} '''
 
-l = Lark(gram,start="main")
+l = lark.Lark(gram,start="main")
 # tree = l.parse(script)
 # print( tree.pretty() )
 
@@ -135,6 +135,7 @@ def pp_command(ast):
     return "Wrong or not implemented"
 
 def asm_declare_vars_list(ast, vars):
+    # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
     if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call') : return 
     if ast.data == 'declaration' :
         # print(ast)
@@ -152,9 +153,26 @@ def asm_declare_vars_list(ast, vars):
             
     else:
         for i in range(len(ast.children)):
-            
             val = asm_declare_vars_list( ast.children[i] , vars )
             if val != None: vars.append(val)
+
+def asm_init_vars_main(ast):
+    if len(ast.children) > 0:
+        assert(ast.data == "arglist")
+        decl_var = ""
+        init_var = ""
+        for i in range(len(ast.children)):
+            v = ast.children[i].children[0]
+            decl_var += f"{v} : dq 0\n"
+            init_var += f"""mov rbx, [argv]
+mov rdi, [rbx+{(i+1)*8}]
+call atoi
+mov [{v}], rax
+"""
+        return decl_var, init_var
+    
+    assert(ast.data == "no_var")
+    return "", ""
 
 
 def asm_infunc_declare_vars_list(ast, vars):
@@ -321,13 +339,17 @@ def asm_func(ast):
 def asm_main(ast):
 
     if ast.data == "main":
-        # print(ast.children[0])
+        decl_vars_main, init_vars_main = asm_init_vars_main(ast.children[0])
+        print(decl_vars_main, init_vars_main)
         script = asm_command(ast.children[1])
         returned = asm_expression(ast.children[2].children[0])
+        # Ignore completement le returned
         return f"""
         main:
         push rbp            
         mov rbp, rsp
+        mov [argv], rsi
+        {init_vars_main}
         {script}
         
         mov rdi, asm_ret_msg
@@ -335,22 +357,27 @@ def asm_main(ast):
         call printf
         pop rbp
         ret
-        """
+        """, decl_vars_main
     
     
-    return "Wrong or not implemented"
+    return "Wrong or not implemented", "Wrong or not implemented"
     
 def assembly(script):
     vars = []
-    l = Lark(gram, start= "main")
+    l = lark.Lark(gram, start= "main")
     t = l.parse(script)
 
     asm_script = """extern printf; e.g stdio.h
+    extern atoi;
     section .data
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
+    argv : dq 0
     """
 
+    main_prog, init_vars_main = asm_main(t)
+
+    asm_script += init_vars_main
 
     asm_declare_vars_list(t, vars)
     asm_script +=  asm_declare_vars(vars)
@@ -361,7 +388,7 @@ def assembly(script):
         asm_script += asm_func(t)
 
 
-    asm_script += asm_main(t)
+    asm_script += main_prog
     
 
     # print(asm_command(t))
@@ -373,7 +400,7 @@ def assembly(script):
 
 
 if __name__ == '__main__':
-    # l2 = Lark(string,start="main")
+    # l2 = lark.Lark(string,start="main")
     # tasm = l2.parse("main(x){int x ; while(x < 10 ) {x = x +1; int z = 0; }return 0 ;}")
     # # print(asm_command(tasm))
     # vars = []

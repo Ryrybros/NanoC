@@ -13,7 +13,7 @@ expression : IDENTIFIER -> variable
 
 
 var : NAME -> variable
-arglist : ( var ",")* var
+arglist : ( var ",")* var | -> no_var
 return : "return" expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"

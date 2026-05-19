@@ -1,7 +1,9 @@
 extern printf; e.g stdio.h
+    extern atoi;
     section .data
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
+    argv : dq 0
     x : dq 10
 s : db "HEllo world ",10," ", 0
 endl : db " ",10," ", 0
@@ -39,6 +41,8 @@ endl : db " ",10," ", 0
         main:
         push rbp            
         mov rbp, rsp
+        mov [argv], rsi
+        
         
             call hello
         
@@ -114,6 +118,10 @@ endl : db " ",10," ", 0
                 
         end_else_1:
         
+                    mov rdi, endl
+                    xor rax, rax
+                    call printf
+                
         
         mov rdi, asm_ret_msg
         xor rax, rax
