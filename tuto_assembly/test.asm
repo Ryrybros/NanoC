@@ -2,81 +2,91 @@ extern printf; e.g stdio.h
     section .data
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
-    x : dq 10
-s : db "HEllo world ",10," ", 0
+    a : dq 5
 endl : db " ",10," ", 0
    global main
     section .text
             ;This is a function
-            hello:                    ;Name of func
-            
-                    push rbp
-                    mov rbp, rsp
-                    sub rsp, 16
-                mov qword [rbp - 8],2
+            fact:                    ;Name of func
 
+            push rbp
+            mov rbp, rsp
             
-                     
-        mov rax, 10
+            
+         
+        mov rax, 1
         push rax
-        mov rax, [rbp - 8]
+        mov rax, rdi
         pop rbx
-        add rax, rbx
+        cmp rax, rbx
+        setl al
+        movzx rax, al
+    
+        cmp rax, 0
+        jz end
+        
+        mov rax, 1
+        mov rsp, rbp           
+        pop rbp     
+        ret
+        
+        jmp end_else
+        end:
+        
+         
+        ;This is a function call
+ 
+        mov rax, 1
+        push rax
+        mov rax, rdi
+        pop rbx
+        sub rax, rbx
         
     
-                    mov [rbp - 8] , rax
+            push rdi
+            mov rdi , rax
             
-                    mov rdi, asm_int_prtr
-                    mov rsi, [rbp - 8]
-                    call printf
-                
-            mov rax, [rbp - 8]
-            mov rsp, rbp              
-            pop rbp     
-            ret
+
+call fact;end_func_call
+
+            pop rdi
+            
+        push rax
+        mov rax, rdi
+        pop rbx
+        imul  rax, rbx
+        
+    
+        mov rsp, rbp           
+        pop rbp     
+        ret
+        
+        end_else:
+            
             
         main:
         push rbp            
         mov rbp, rsp
         
-            call hello
-        
-                    mov rdi, s
-                    call printf
-                
-        while:
-             
-        mov rax, 0
-        push rax
-        mov rax, [x]
-        pop rbx
-        cmp rax, rbx
-        setg al
-        movzx rax, al
-    
-            cmp rax, 0
-            jz end_while
+            ;This is a function call
+mov rax, [a]
+            push rdi
+            mov rdi , rax
             
-                    mov rdi, asm_int_prtr
-                    mov rsi, [x]
-                    call printf
-                
+
+call fact;end_func_call
+
+            pop rdi
+            
+            mov qword [a] , rax
+            
                     mov rdi, endl
                     call printf
                 
-                     
-        mov rax, 1
-        push rax
-        mov rax, [x]
-        pop rbx
-        sub rax, rbx
-        
-    
-                    mov [x] , rax
-            
-            jmp while
-        end_while:
-        
+                    mov rdi, asm_int_prtr
+                    mov rsi, [a] 
+                    call printf
+                
     
         
     mov rdi, asm_ret_msg

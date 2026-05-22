@@ -10,11 +10,15 @@ expression : IDENTIFIER -> variable
             | SIGNED_NUMBER -> int
             | STRING -> str
             | expression OPBIN expression -> bin
+            | "(" expression ")" -> parenthesis
+            | func_call -> function_call
 
 
 var : NAME -> variable
-arglist : ( var ",")* var
-return : "return" expression ";" -> return
+parameter : NAME -> parameter
+arglist : ( parameter ",")* parameter | 
+given_arglist : (expression "," )* expression |
+return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
 command : IDENTIFIER "=" expression ";" -> assignment
@@ -26,12 +30,13 @@ command : IDENTIFIER "=" expression ";" -> assignment
         | "print" "(" format "," expression ")" ";"            -> print
         | "int" var ";" -> declaration
         | "str" var "=" ( STRING ) ";" -> declaration
-        | "int" var "=" ( SIGNED_NUMBER | var ) ";" -> declaration 
+        | "int" var "=" ( SIGNED_NUMBER | parameter ) ";" -> declaration 
         | func_call ";" -> function_call
+        | "return" expression ";" -> return
 
 main : func* "main" "(" arglist ")" "{" command* return "}" func*
-func : "func " NAME "(" arglist ")" "{" command* return "}" -> function
-func_call : NAME "()" 
+func : "func " NAME "(" arglist ")" "{" command*"}" -> function
+func_call : NAME "(" given_arglist ")" 
 
 %import common.WS
 %import common.SIGNED_NUMBER
