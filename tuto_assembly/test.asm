@@ -4,7 +4,11 @@ extern printf; e.g stdio.h
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
     argv : dq 0
-    a : dq 8
+    a1 : dq 0
+a2 : dq 0
+a3 : dq 0
+a4 : dq 0
+a : dq 8
 endl : db " ",10," ", 0
 e: dq 0 
 x : dq 10
@@ -89,8 +93,50 @@ call fib;end_func_call
         push rbp            
         mov rbp, rsp
         mov [argv], rsi
+        mov rbx, [argv]
+mov rdi, [rbx+8]
+call atoi
+mov [a1], rax
+mov rbx, [argv]
+mov rdi, [rbx+16]
+call atoi
+mov [a2], rax
+mov rbx, [argv]
+mov rdi, [rbx+24]
+call atoi
+mov [a3], rax
+mov rbx, [argv]
+mov rdi, [rbx+32]
+call atoi
+mov [a4], rax
+
+         
+        mov rax, [a4]
+        push rax
+         
+        mov rax, [a3]
+        push rax
+         
+        mov rax, [a2]
+        push rax
+        mov rax, [a1]
+        pop rbx
+        add rax, rbx
         
+    
+        pop rbx
+        add rax, rbx
         
+    
+        pop rbx
+        add rax, rbx
+        
+    
+                    mov rdi, asm_int_prtr
+                    mov rsi, rax
+                    xor rax, rax
+                    call printf
+                
             ;This is a function call
 mov rax, [a]
             push rdi

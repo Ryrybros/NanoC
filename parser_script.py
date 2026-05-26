@@ -48,7 +48,6 @@ def asm_expression(ast, parameters = None):
         else: return f"mov rax, {ast.children[0].value}"
     
     if ast.data == "function_call":
-        # print(ast.children[0].children[1].children)
         arg_reg = ""
         arg_script = ""
         end_func_arg_script = ""
@@ -179,7 +178,7 @@ def pp_command(ast, parameters):
 
 def asm_declare_vars_list(ast, vars):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
-    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call') : return 
+    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call', "arglist") : return 
     if ast.data == 'declaration' :
         
         if len(ast.children) == 1:
@@ -222,13 +221,11 @@ def asm_infunc_declare_vars_list(ast, vars):
     if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call') : return 
     if ast.data == 'declaration' :
         
-        print("and\n")
         if len(ast.children) == 1:
             return (ast.children[0].children[0].value, "0") 
         elif len(ast.children) == 2:
             alloc_command = "dq"
             
-            print(type(ast.children[1]))
             if (type(ast.children[1]) == type(ast)):
                 if ast.children[1].data == "parameter": printed_string = ast.children[1].children[0] 
             else: 
@@ -415,7 +412,6 @@ def getRegister(arg : str , parameters : list):
 
 
 def asm_func(ast):
-    # print(ast)
     func_script = ""
     
     for child in ast.children:
@@ -450,7 +446,6 @@ def asm_func(ast):
     
 
             for  i in range(len(vars)):
-                # print("will put as rval :" ,vars[i] )
                 var_dec += f"mov qword [rbp - {8*(i+1)}],{vars[i][1]}\n" 
                 script = script.replace(f"[{vars[i][0]}]", f"[rbp - {(i+1)*8}]" )
 
@@ -472,7 +467,6 @@ def asm_main(ast):
 
     if ast.data == "main":
         decl_vars_main, init_vars_main = asm_init_vars_main(ast.children[0])
-        print(decl_vars_main, init_vars_main)
         script = asm_command(ast.children[1])
         returned = asm_expression(ast.children[2].children[0])
         # Ignore completement le returned
@@ -527,16 +521,12 @@ def assembly(script):
     asm_script += main_prog
     
 
-    # print(asm_command(t))
-    # print(t.pretty())
-    print(asm_script)
     with open("tuto_assembly/test.asm", "w") as f:
         f.write(asm_script)
     os.system("./tuto_assembly/build.sh tuto_assembly/test.asm")
 
 
 def pp_func(ast):
-    # print(ast)
     func = f""
     for child in ast.children:
         if child.data == "function":

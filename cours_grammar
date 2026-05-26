@@ -33,7 +33,7 @@ command : NAME "=" expression ";" -> assignment
         | func_call ";" -> function_call
         | "return" expression ";" -> return
 
-main : func* "main" "(" arglist ")" "{" command* return "}" func*
+main : "main" "(" arglist ")" "{" command* return "}" func*
 func : "func " NAME "(" arglist ")" "{" command*"}" -> function
 func_call : NAME "(" given_arglist ")" 
 
