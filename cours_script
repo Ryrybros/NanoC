@@ -13,7 +13,6 @@ main(){
     
     int x = 10;
     str s = "HEllo world\n" ;
-    str endl = "\n";
     print(str, s);
     
     while(x > 0)

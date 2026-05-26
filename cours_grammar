@@ -15,7 +15,7 @@ expression :  NAME -> variable
 
 
 parameter : NAME -> parameter
-arglist : ( parameter ",")* parameter | 
+arglist : ( parameter ",")* parameter | -> no_var
 given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
