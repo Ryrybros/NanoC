@@ -192,8 +192,9 @@ def asm_declare_vars_list(ast, vars):
                 printed_string = printed_string.replace(r"\n",  ' ",10," ' )
                 return ast.children[0] + f" : {alloc_command} " + printed_string + ", 0"
             return ast.children[0] + f" : {alloc_command} " + printed_string  
-            
     else:
+        #Appel récursif car ça n'est pas une declaration donc il faut itérer plus loin dans l'arbre
+        # print(f"esle is called on {type(ast.children[0])}")
         for i in range(len(ast.children)):
             val = asm_declare_vars_list( ast.children[i] , vars )
             if val != None: vars.append(val)
@@ -218,11 +219,11 @@ mov [{v}], rax
 
 
 def asm_infunc_declare_vars_list(ast, vars):
-    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call') : return 
+    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call','arglist') : return 
     if ast.data == 'declaration' :
         
         if len(ast.children) == 1:
-            return (ast.children[0].children[0].value, "0") 
+            return (ast.children[0].value, "0") 
         elif len(ast.children) == 2:
             alloc_command = "dq"
             
@@ -237,7 +238,6 @@ def asm_infunc_declare_vars_list(ast, vars):
                     printed_string = printed_string.replace(r"\n",  ' ",10," ' )
                     return ast.children[0].children[0] + f" : {alloc_command} " + printed_string + ", 0"
             return (ast.children[0].children[0].value, printed_string)
-            
     else:
         for i in range(len(ast.children)):
             
@@ -351,18 +351,17 @@ def asm_command(ast, parameters = None):
                     reg = getRegister(ast.children[1].children[0], parameters)
                     # if reg == "rdi": reg = registers[len(parameters) - 1]
                     return f"""
-                    push rbx ; Dummy
+                    
                     push rdi
                     push rsi
                     push rax
-                    mov rax, {reg}
+                    xor rax, rax
                     mov rdi, asm_int_prtr
-                    mov rsi, rax 
+                    mov rsi, {reg}
                     call printf
                     pop rax
                     pop rsi
                     pop rdi
-                    pop rbx
                     """
                 return f"""
                     mov rdi, asm_int_prtr
@@ -401,7 +400,7 @@ def asm_command(ast, parameters = None):
 
 
 
-    
+    # print(f"wrong ast : {ast}")
     
     return "Wrong or not implemented"
 
@@ -424,8 +423,7 @@ def asm_func(ast):
             
             if len(vars) != 0:
                 var_dec = f"""
-                    push rbp
-                    mov rbp, rsp
+                    
                     sub rsp, {int(8*len(vars) / 16)*16 + 16}
                 """
             else: var_dec = ""
@@ -464,27 +462,30 @@ def asm_func(ast):
   
   
 def asm_main(ast):
-
-    if ast.data == "main":
-        decl_vars_main, init_vars_main = asm_init_vars_main(ast.children[0])
-        script = asm_command(ast.children[1])
-        returned = asm_expression(ast.children[2].children[0])
-        # Ignore completement le returned
-        return f"""
-        main:
-        push rbp            
-        mov rbp, rsp
-        mov [argv], rsi
-        {init_vars_main}
-        {script}
-        
-        mov rdi, asm_ret_msg
-        xor rax, rax
-        call printf
-        pop rbp
-        ret
-        """, decl_vars_main
+    for child in ast.children:
+        print(child)
+        if child.data == "main":
+            decl_vars_main, init_vars_main = asm_init_vars_main(child.children[0])
+            script = asm_command(child.children[1])
+            returned = asm_expression(child.children[2].children[0])
+            # Ignore completement le returned
+            return f"""
+            main:
+            push rbp            
+            mov rbp, rsp
+            mov [argv], rsi
+            {init_vars_main}
+            {script}
+            
+            mov rdi, asm_ret_msg
+            xor rax, rax
+            call printf
+            pop rbp
+            ret
+            """, decl_vars_main
     
+    # print(f"wrong in main ast : {ast}")
+
     
     return "Wrong or not implemented", "Wrong or not implemented"
     
@@ -493,9 +494,9 @@ def asm_main(ast):
 
 def assembly(script):
     vars = []
-    l = lark.Lark(gram, start= "main")
+    l = lark.Lark(gram, start= "start")
     t = l.parse(script)
-
+    # print(t.children[0].pretty())
     asm_script = """extern printf; e.g stdio.h
     extern atoi;
     section .data
@@ -520,10 +521,10 @@ def assembly(script):
 
     asm_script += main_prog
     
-
+    print(asm_script)
     with open("tuto_assembly/test.asm", "w") as f:
         f.write(asm_script)
-    os.system("./tuto_assembly/build.sh tuto_assembly/test.asm")
+    # os.system("./tuto_assembly/build.sh tuto_assembly/test.asm")
 
 
 def pp_func(ast):
