@@ -4,39 +4,86 @@ extern printf; e.g stdio.h
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
     argv : dq 0
-    x : dq 10
-s : db "HEllo world ",10," ", 0
+    a : dq 8
 endl : db " ",10," ", 0
+e: dq 0 
+x : dq 10
+s : db "HEllo world ",10," ", 0
    global main
     section .text
             ;This is a function
-            hello:                    ;Name of func
-            
-                    push rbp
-                    mov rbp, rsp
-                    sub rsp, 16
-                mov qword [rbp - 8],2
+            fib:                    ;Name of func
 
+            push rbp
+            mov rbp, rsp
             
-                     
-        mov rax, 10
+            
+         
+        mov rax, 2
         push rax
-        mov rax, [rbp - 8]
+        mov rax, rdi
+        pop rbx
+        cmp rax, rbx
+        setl al
+        movzx rax, al
+    
+        cmp rax, 0
+        jz end_2
+        
+        mov rax, 1
+        mov rsp, rbp           
+        pop rbp     
+        ret
+        
+        jmp end_else_2
+        end_2:
+        
+         
+        ;This is a function call
+ 
+        mov rax, 1
+        push rax
+        mov rax, rdi
+        pop rbx
+        sub rax, rbx
+        
+    
+            push rdi
+            mov rdi , rax
+            
+
+call fib;end_func_call
+
+            pop rdi
+            
+        push rax
+        ;This is a function call
+ 
+        mov rax, 2
+        push rax
+        mov rax, rdi
+        pop rbx
+        sub rax, rbx
+        
+    
+            push rdi
+            mov rdi , rax
+            
+
+call fib;end_func_call
+
+            pop rdi
+            
         pop rbx
         add rax, rbx
         
     
-                    mov [rbp - 8] , rax
+        mov rsp, rbp           
+        pop rbp     
+        ret
+        
+        end_else_2:
             
-                    mov rdi, asm_int_prtr
-                    mov rsi, [rbp - 8]
-                    xor rax, rax
-                    call printf
-                
-            mov rax, [rbp - 8]
-            mov rsp, rbp              
-            pop rbp     
-            ret
             
         main:
         push rbp            
@@ -44,8 +91,57 @@ endl : db " ",10," ", 0
         mov [argv], rsi
         
         
-            call hello
+            ;This is a function call
+mov rax, [a]
+            push rdi
+            mov rdi , rax
+            
+
+call fib;end_func_call
+
+            pop rdi
+            
+            mov qword [a] , rax
+            
+                    mov rdi, endl
+                    xor rax, rax
+                    call printf
+                
+                    mov rdi, asm_int_prtr
+                    mov rsi, [a]
+                    xor rax, rax
+                    call printf
+                
+                    mov rdi, endl
+                    xor rax, rax
+                    call printf
+                
+                     
+        mov rax, 10
+        push rax
+         
+        mov rax, [a]
+        push rax
+        mov rax, [e]
+        pop rbx
+        add rax, rbx
         
+    
+        pop rbx
+        add rax, rbx
+        
+    
+                    mov qword [e] , rax
+            
+                    mov rdi, asm_int_prtr
+                    mov rsi, [e]
+                    xor rax, rax
+                    call printf
+                
+                    mov rdi, endl
+                    xor rax, rax
+                    call printf
+                
                     mov rdi, s
                     xor rax, rax
                     call printf
@@ -80,7 +176,7 @@ endl : db " ",10," ", 0
         sub rax, rbx
         
     
-                    mov [x] , rax
+                    mov qword [x] , rax
             
             jmp while_0
         end_while_0:

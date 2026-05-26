@@ -1,4 +1,3 @@
-IDENTIFIER: /[a-zA-Z_][a-zA-Z_0-9]*/
 OPBIN: /[+\-*\/<>]/
 TYPE_STR : "str"
 TYPE_INT : "int"
@@ -6,32 +5,37 @@ TYPE_INT : "int"
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
          
-expression : IDENTIFIER -> variable
+expression :  NAME -> variable
             | SIGNED_NUMBER -> int
             | STRING -> str
             | expression OPBIN expression -> bin
+            | "(" expression ")" -> parenthesis
+            | func_call -> function_call
 
 
-var : NAME -> variable
-arglist : ( var ",")* var | -> no_var
-return : "return" expression ";" -> return
+
+parameter : NAME -> parameter
+arglist : ( parameter ",")* parameter | -> no_var
+given_arglist : (expression "," )* expression |
+return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
-command : IDENTIFIER "=" expression ";" -> assignment
+command : NAME "=" expression ";" -> assignment
         | command* command -> sequence
         | "pass" ";"    -> pass
         | if else -> if_else
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
         | "print" "(" format "," expression ")" ";"            -> print
-        | "int" var ";" -> declaration
-        | "str" var "=" ( STRING ) ";" -> declaration
-        | "int" var "=" ( SIGNED_NUMBER | var ) ";" -> declaration 
+        | "int" NAME ";" -> declaration
+        | "str" NAME "=" ( STRING ) ";" -> declaration
+        | "int" NAME "=" ( SIGNED_NUMBER | parameter ) ";" -> declaration 
         | func_call ";" -> function_call
+        | "return" expression ";" -> return
 
-main : "main" "(" arglist ")" "{" command* return "}" func*
-func : "func " NAME "(" arglist ")" "{" command* return "}" -> function
-func_call : NAME "()" 
+main : func* "main" "(" arglist ")" "{" command* return "}" func*
+func : "func " NAME "(" arglist ")" "{" command*"}" -> function
+func_call : NAME "(" given_arglist ")" 
 
 %import common.WS
 %import common.SIGNED_NUMBER

@@ -1,11 +1,20 @@
 
-
 main(){
-    hello();
+    int a = 8;
+    a = fib(a);
+    str endl = "\n";
+    print(str, endl);
+    print(int,a);
+    print(str, endl);
+    int e;
+    e = e + a + 10;
+    print(int, e);
+    print(str, endl);
+    
     int x = 10;
     str s = "HEllo world\n" ;
-    str endl = "\n";
     print(str, s);
+    
     while(x > 0)
     {
         print(int, x);
@@ -23,10 +32,12 @@ main(){
 }
 
 
-func hello(x){
-    
-    int y = 2;
-    y = y + 10;
-    print(int,y);
-    return y ;
+
+func fib(n){
+    if(n < 2){
+        return 1 ;
+    }else{
+        return fib(n - 2) + fib(n - 1);
+    }
 }
+
