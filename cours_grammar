@@ -12,7 +12,7 @@ expression :  NAME -> variable
             | "(" expression ")" -> parenthesis
             | func_call -> function_call
 
-
+start: func* main func*
 
 parameter : NAME -> parameter
 arglist : ( parameter ",")* parameter | -> no_var
@@ -33,7 +33,7 @@ command : NAME "=" expression ";" -> assignment
         | func_call ";" -> function_call
         | "return" expression ";" -> return
 
-main : "main" "(" arglist ")" "{" command* return "}" func*
+main : "main" "(" arglist ")" "{" command* return "}"
 func : "func " NAME "(" arglist ")" "{" command*"}" -> function
 func_call : NAME "(" given_arglist ")" 
 

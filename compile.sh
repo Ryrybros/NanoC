@@ -1,5 +1,5 @@
 #! bash compile.sh to execute
-python3 parser_script.py
+python3 parser_script.py &&
 
 if nasm -f elf64 -o tuto_assembly/test.o tuto_assembly/test.asm ; then
     echo "Assembled successfully."
@@ -8,6 +8,6 @@ else
     exit 1
 fi
 
-gcc -no-pie test.o -o test.exe
+gcc -no-pie tuto_assembly/test.o -o tuto_assembly/test.exe
 
-./test.exe "$@"
+./tuto_assembly/test.exe "$@"
