@@ -22,7 +22,7 @@ if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
 command : NAME "=" expression ";" -> assignment
         | command* command -> sequence
-        | "pass"    -> pass
+        | "pass" ";"    -> pass
         | if else -> if_else
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while

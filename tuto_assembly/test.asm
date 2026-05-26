@@ -1,4 +1,5 @@
 extern printf; e.g stdio.h
+    extern atoi;
     section .data
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
@@ -84,6 +85,8 @@ call fib;end_func_call
         main:
         push rbp            
         mov rbp, rsp
+        mov [argv], rsi
+        
         
             ;This is a function call
 mov rax, [a]
@@ -105,6 +108,7 @@ call fib;end_func_call
                     call printf
                 
                     mov rdi, endl
+                    xor rax, rax
                     call printf
                 
                      
@@ -133,8 +137,9 @@ call fib;end_func_call
                 
     
         
-    mov rdi, asm_ret_msg
-    call printf
-    pop rbp
-    ret
-    
+        mov rdi, asm_ret_msg
+        xor rax, rax
+        call printf
+        pop rbp
+        ret
+        
