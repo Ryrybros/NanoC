@@ -1,19 +1,26 @@
 
 
 main(x){
-    int a = 5;
-    a = fact(a);
+    int a = 8;
+    a = fib(a);
     str endl = "\n";
     print(str, endl);
     print(int,a);
+    print(str, endl);
+    int e;
+    e = e + a + 10;
+    print(int, e);
+    print(str, endl);
     return 0;
 }
 
-func fact(n){
-    if(n < 1){
-        return 1;
+
+
+func fib(n){
+    if(n < 2){
+        return 1 ;
     }else{
-        return n*fact(n-1);
+        return fib(n - 2) + fib(n - 1);
     }
 }
 

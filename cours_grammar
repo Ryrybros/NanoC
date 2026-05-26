@@ -1,4 +1,3 @@
-IDENTIFIER: /[a-zA-Z_][a-zA-Z_0-9]*/
 OPBIN: /[+\-*\/<>]/
 TYPE_STR : "str"
 TYPE_INT : "int"
@@ -6,7 +5,7 @@ TYPE_INT : "int"
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
          
-expression : IDENTIFIER -> variable
+expression :  NAME -> variable
             | SIGNED_NUMBER -> int
             | STRING -> str
             | expression OPBIN expression -> bin
@@ -14,23 +13,23 @@ expression : IDENTIFIER -> variable
             | func_call -> function_call
 
 
-var : NAME -> variable
+
 parameter : NAME -> parameter
 arglist : ( parameter ",")* parameter | 
 given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
-command : IDENTIFIER "=" expression ";" -> assignment
+command : NAME "=" expression ";" -> assignment
         | command* command -> sequence
         | "pass"    -> pass
         | if else -> if_else
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
         | "print" "(" format "," expression ")" ";"            -> print
-        | "int" var ";" -> declaration
-        | "str" var "=" ( STRING ) ";" -> declaration
-        | "int" var "=" ( SIGNED_NUMBER | parameter ) ";" -> declaration 
+        | "int" NAME ";" -> declaration
+        | "str" NAME "=" ( STRING ) ";" -> declaration
+        | "int" NAME "=" ( SIGNED_NUMBER | parameter ) ";" -> declaration 
         | func_call ";" -> function_call
         | "return" expression ";" -> return
 

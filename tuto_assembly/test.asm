@@ -2,19 +2,20 @@ extern printf; e.g stdio.h
     section .data
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
-    a : dq 5
+    a : dq 8
 endl : db " ",10," ", 0
+e: dq 0 
    global main
     section .text
             ;This is a function
-            fact:                    ;Name of func
+            fib:                    ;Name of func
 
             push rbp
             mov rbp, rsp
             
             
          
-        mov rax, 1
+        mov rax, 2
         push rax
         mov rax, rdi
         pop rbx
@@ -47,14 +48,30 @@ endl : db " ",10," ", 0
             mov rdi , rax
             
 
-call fact;end_func_call
+call fib;end_func_call
 
             pop rdi
             
         push rax
+        ;This is a function call
+ 
+        mov rax, 2
+        push rax
         mov rax, rdi
         pop rbx
-        imul  rax, rbx
+        sub rax, rbx
+        
+    
+            push rdi
+            mov rdi , rax
+            
+
+call fib;end_func_call
+
+            pop rdi
+            
+        pop rbx
+        add rax, rbx
         
     
         mov rsp, rbp           
@@ -74,7 +91,7 @@ mov rax, [a]
             mov rdi , rax
             
 
-call fact;end_func_call
+call fib;end_func_call
 
             pop rdi
             
@@ -85,6 +102,33 @@ call fact;end_func_call
                 
                     mov rdi, asm_int_prtr
                     mov rsi, [a] 
+                    call printf
+                
+                    mov rdi, endl
+                    call printf
+                
+                     
+        mov rax, 10
+        push rax
+         
+        mov rax, [a]
+        push rax
+        mov rax, [e]
+        pop rbx
+        add rax, rbx
+        
+    
+        pop rbx
+        add rax, rbx
+        
+    
+                    mov qword [e] , rax
+            
+                    mov rdi, asm_int_prtr
+                    mov rsi, [e] 
+                    call printf
+                
+                    mov rdi, endl
                     call printf
                 
     

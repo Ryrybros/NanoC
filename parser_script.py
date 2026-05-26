@@ -116,9 +116,7 @@ def asm_expression(ast, parameters = None):
 
 
 def pp_args(ast):
-    if ast.data == "var":
-        variable = ast.children[0].value 
-        return variable
+    
     if ast.data == "arglist":
         arglist = ast.children
         res =  f"{arglist[0].children[0].value}"
@@ -180,7 +178,7 @@ def asm_declare_vars_list(ast, vars):
     if ast.data == 'declaration' :
         
         if len(ast.children) == 1:
-            return ast.children[0].children[0] + ": dq 0 " 
+            return ast.children[0] + ": dq 0 " 
         elif len(ast.children) == 2:
             alloc_command = "dq"
             printed_string = ast.children[1].value
@@ -188,8 +186,8 @@ def asm_declare_vars_list(ast, vars):
                 alloc_command = "db" 
                 printed_string = str(ast.children[1])
                 printed_string = printed_string.replace(r"\n",  ' ",10," ' )
-                return ast.children[0].children[0] + f" : {alloc_command} " + printed_string + ", 0"
-            return ast.children[0].children[0] + f" : {alloc_command} " + printed_string  
+                return ast.children[0] + f" : {alloc_command} " + printed_string + ", 0"
+            return ast.children[0] + f" : {alloc_command} " + printed_string  
             
     else:
         for i in range(len(ast.children)):
