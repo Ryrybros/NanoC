@@ -1,3 +1,7 @@
 *.out
 *.exe
 *.o
+test.py
+__pycache__/*
+tuto_assembly/*
+temp_script

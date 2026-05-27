@@ -1,0 +1,25 @@
+
+main(){
+    int c;
+    str endl = "\n";
+    while(hallo(c + 1) < 30){
+        c = c + 1 ;
+    }
+    print(str, endl);
+    print(int,c);
+    print(str, endl);
+    return 0; 
+}
+
+
+func hello(x){
+    int a;
+    a = 10 + x;
+    x = a +20;
+    a = a*x;
+    return a;
+}
+
+func hallo(x){
+    return x*x;
+}

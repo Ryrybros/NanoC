@@ -1,0 +1,21 @@
+
+main(){
+    int c;
+    str endl = "\n";
+
+    c = hello();
+    print(str, endl);
+    print(int,c);
+    print(str, endl);
+    return 0; 
+}
+
+
+func hello(){
+    int a;
+    int b;
+    a = 10 + b;
+    b = a +20;
+    a = a*b;
+    return a;
+}

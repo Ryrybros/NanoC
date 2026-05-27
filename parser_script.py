@@ -17,6 +17,9 @@ registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
 
 cpt_if_while = [-1]
 
+funcs_arg_len = dict() #Has to be global to check if func calls respec nb args of funcs
+
+
 #The code is parsed
 
 def pp_expression(ast, parameters = None):
@@ -48,6 +51,7 @@ def asm_expression(ast, parameters = None):
         else: return f"mov rax, {ast.children[0].value}"
     
     if ast.data == "function_call":
+        ensure_correct_args_func(ast)
         arg_reg = ""
         arg_script = ""
         end_func_arg_script = ""
@@ -58,7 +62,7 @@ def asm_expression(ast, parameters = None):
             push {getRegister(kid, ast.children[0].children[1].children)}
             mov {getRegister(kid, ast.children[0].children[1].children)} , rax
             """
-            end_func_arg_script = f"""
+            end_func_arg_script += f"""
             pop {getRegister(kid, ast.children[0].children[1].children)}
             """
         
@@ -266,6 +270,9 @@ def asm_command(ast, parameters = None):
             if (parameters != None) and ast.children[0].value in parameters:
                 
                 if ast.children[1].data == 'function_call':
+                    if ast.children[1].children[0].children[0].value not in funcs_arg_len : 
+                
+                        raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
                     return f"""
                     {asm_expression(ast.children[1])}
                     mov {getRegister(ast.children[0].value,parameters)} , rax
@@ -280,6 +287,7 @@ def asm_command(ast, parameters = None):
             """
         
         if ast.children[1].data == 'function_call':
+            ensure_correct_args_func(ast.children[1])
             return f"""
             {asm_expression(ast.children[1])}
             mov qword [{ast.children[0].value}] , rax
@@ -383,6 +391,7 @@ def asm_command(ast, parameters = None):
                 """
     
     if ast.data == "function_call":
+        ensure_correct_args_func(ast)
         return f"""
             {asm_expression(ast.children[0].children[0], parameters)}
         """
@@ -409,10 +418,16 @@ def getRegister(arg : str , parameters : list):
     index = parameters.index(arg)
     if index < len(registers):    return registers[index]
 
+def ensure_correct_args_func(ast):
+    if ast.children[0].children[0].value not in funcs_arg_len : 
+            raise ValueError(f'Called function {ast.children[0].children[0].value} but it was never defined !')
+    nb_args = len(ast.children[0].children[1].children)
+    expected_nb_args = funcs_arg_len[ast.children[0].children[0].value] 
+    if  nb_args != expected_nb_args  : raise ValueError(f"Error : function {ast.children[0].children[0].value} expected {expected_nb_args} arguments but got {nb_args}" )
+        
 
 def asm_func(ast):
     func_script = ""
-    
     for child in ast.children:
         if child.data == "function":
             
@@ -430,6 +445,8 @@ def asm_func(ast):
             
             arg_list_to_replace = [kid.children[0].value for kid in child.children[1].children ]
 
+            funcs_arg_len[child.children[0].value] = len(arg_list_to_replace)
+
             script = asm_command(child.children[2], arg_list_to_replace)
             # returned = asm_expression(child.children[3].children[0], arg_list_to_replace)
             arg_list = []
@@ -439,10 +456,9 @@ def asm_func(ast):
 
             for argument in arg_list_to_replace:
                 val = argument
-                
                 arg_list.append(val)
     
-
+            #Vars contains the list of variables that were collected by asm_infunc_declare_vars_list
             for  i in range(len(vars)):
                 var_dec += f"mov qword [rbp - {8*(i+1)}],{vars[i][1]}\n" 
                 script = script.replace(f"[{vars[i][0]}]", f"[rbp - {(i+1)*8}]" )
@@ -456,14 +472,15 @@ def asm_func(ast):
             {var_dec}
             {script}    
             """      
-    return func_script
+    # print(funcs_arg_len)
+    return (func_script, funcs_arg_len)
   
   
   
   
 def asm_main(ast):
     for child in ast.children:
-        print(child)
+
         if child.data == "main":
             decl_vars_main, init_vars_main = asm_init_vars_main(child.children[0])
             script = asm_command(child.children[1])
@@ -505,6 +522,10 @@ def assembly(script):
     argv : dq 0
     """
 
+    fun_ret = asm_func(t) #Has to be put first to ensure that func calls respect nb of vars
+    fun = fun_ret[0]
+    fun_args = fun_ret[1]
+
     main_prog, init_vars_main = asm_main(t)
 
     asm_script += init_vars_main
@@ -514,18 +535,22 @@ def assembly(script):
 
     asm_script += """   global main
     section .text"""
-    fun = asm_func(t) 
+    
+
     if  fun != None:    
         asm_script += fun
 
 
     asm_script += main_prog
     
-    print(asm_script)
+
     with open("tuto_assembly/test.asm", "w") as f:
         f.write(asm_script)
     # os.system("./tuto_assembly/build.sh tuto_assembly/test.asm")
 
+def run(code = script):
+    assembly(code)
+    os.system("./tuto_assembly/build.sh tuto_assembly/test.asm")
 
 def pp_func(ast):
     func = f""
