@@ -1,0 +1,12 @@
+
+main(){
+    
+    hallo();
+    return 0; 
+}
+
+
+func hallo(){
+    str hel = "Hello !";
+    print(str,hel);
+}

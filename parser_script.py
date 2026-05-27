@@ -1,6 +1,6 @@
 import os
 import lark
-from pretty_printer_script import *
+# from pretty_printer_script import *
 
 
 path = "cours_script"
@@ -21,20 +21,6 @@ funcs_arg_len = dict() #Has to be global to check if func calls respec nb args o
 
 
 #The code is parsed
-
-def pp_expression(ast, parameters = None):
-    if ast.data == "parenthesis": return f"( {pp_expression(ast.children[0])} )"
-    if ast.data in  ( "variable" , "int"  ):
-        val = ast.children[0].value
-        if parameters != None and val in parameters : 
-            val = f"(param   {val})"
-        return val
-    lo = f"{pp_expression(ast.children[0], parameters)}"
-    op = f"{ast.children[1].value}"
-    ro = f"{pp_expression(ast.children[2], parameters)}"
-    
-    return lo + " " + op + " " + ro
-
 
 
 def asm_expression(ast, parameters = None):
