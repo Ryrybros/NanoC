@@ -1,6 +1,10 @@
+
 OPBIN: /[+\-*\/<>]/
 TYPE_STR : "str"
 TYPE_INT : "int"
+
+TYPE_NAME : "int" | "str" | "ptr"
+type   : TYPE_NAME
 
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
@@ -14,7 +18,7 @@ expression :  NAME -> variable
 
 start: func* main func*
 
-parameter : NAME -> parameter
+parameter : type NAME -> parameter
 arglist : ( parameter ",")* parameter | -> no_var
 given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
@@ -27,9 +31,7 @@ command : NAME "=" expression ";" -> assignment
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
         | "print" "(" format "," expression ")" ";"            -> print
-        | "int" NAME ";" -> declaration
-        | "str" NAME "=" ( STRING ) ";" -> declaration
-        | "int" NAME "=" ( SIGNED_NUMBER | parameter ) ";" -> declaration 
+        | type NAME ";" -> declaration
         | func_call ";" -> function_call
         | "return" expression ";" -> return
 

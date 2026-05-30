@@ -4,7 +4,8 @@ extern printf; e.g stdio.h
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
     argv : dq 0
-    c : dq 10
+    p : dq 0
+a : dq 8
 endl : db " ",10," ", 0
    global main
     section .text
@@ -15,6 +16,18 @@ endl : db " ",10," ", 0
             mov rbp, rsp
             
             
+                    
+                    push rdi
+                    push rsi
+                    push rax
+                    xor rax, rax
+                    mov rdi, asm_int_prtr
+                    mov rsi, rsi
+                    call printf
+                    pop rax
+                    pop rsi
+                    pop rdi
+                    
          
         mov rax, 2
         push rax
@@ -27,7 +40,7 @@ endl : db " ",10," ", 0
         cmp rax, 0
         jz end_0
         
-        mov rax, rdi
+        mov rax, 1
         mov rsp, rbp           
         pop rbp     
         ret
@@ -47,11 +60,23 @@ endl : db " ",10," ", 0
     
             push rdi
             mov rdi , rax
+             
+        mov rax, 1
+        push rax
+        mov rax, rsi
+        pop rbx
+        add rax, rbx
+        
+    
+            push rsi
+            mov rsi , rax
             
 
 call fib;end_func_call
 
             pop rdi
+            
+            pop rsi
             
         push rax
         ;This is a function call
@@ -65,11 +90,23 @@ call fib;end_func_call
     
             push rdi
             mov rdi , rax
+             
+        mov rax, 1
+        push rax
+        mov rax, rsi
+        pop rbx
+        add rax, rbx
+        
+    
+            push rsi
+            mov rsi , rax
             
 
 call fib;end_func_call
 
             pop rdi
+            
+            pop rsi
             
         pop rbx
         add rax, rbx
@@ -82,50 +119,51 @@ call fib;end_func_call
         end_else_0:
             
             
-            ;This is a function
-            hallo:                    ;Name of func
-
-            push rbp
-            mov rbp, rsp
-            
-            
-         
-        mov rax, rdi
-        push rax
-        mov rax, rdi
-        pop rbx
-        imul  rax, rbx
-        
-    
-        mov rsp, rbp           
-        pop rbp     
-        ret
-            
-            
             main:
             push rbp            
             mov rbp, rsp
             mov [argv], rsi
             
             
-            ;This is a function call
-mov rax, [c]
+                     
+        mov rax, 2
+        push rax
+        
+         
+        mov rax, 1
+        push rax
+        ;This is a function call
+mov rax, [a]
             push rdi
             mov rdi , rax
+            mov rax, 0
+            push rsi
+            mov rsi , rax
             
 
 call fib;end_func_call
 
             pop rdi
             
-            mov qword [c] , rax
+            pop rsi
+            
+        pop rbx
+        add rax, rbx
+        
+    
+        
+        pop rbx
+        imul  rax, rbx
+        
+    
+                    mov qword [a] , rax
             
                     mov rdi, endl
                     xor rax, rax
                     call printf
                 
                     mov rdi, asm_int_prtr
-                    mov rsi, [c]
+                    mov rsi, [a]
                     xor rax, rax
                     call printf
                 
