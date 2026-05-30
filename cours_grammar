@@ -1,37 +1,58 @@
 
 OPBIN: /[+\-*\/<>]/
+OPPTR: /[+\-]/
 TYPE_STR : "str"
 TYPE_INT : "int"
+PTR : "int" "*"+
 
-TYPE_NAME : "int" | "str" | "ptr"
-type   : TYPE_NAME
+TYPE : "int" | "str" | PTR | "void"
 
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
          
-expression :  NAME -> variable
-            | SIGNED_NUMBER -> int
-            | STRING -> str
-            | expression OPBIN expression -> bin
-            | "(" expression ")" -> parenthesis
+exprint :  SIGNED_NUMBER -> int
+            | exprint OPBIN exprint -> bin
+            | "(" exprint ")" -> parenthesis
             | func_call -> function_call
+            | deref
+
+deref :  "*"+ NAME | "*"+ "(" exprptr ")"
+
+exprstr : STRING -> str
+           | func_call -> function_call
+           | NAME -> variable
+
+exprptr : "null" -> nullptr
+           | NAME OPPTR exprint -> oppexpr
+           | exprint OPPTR NAME -> oppexpr
+           | func_call -> function_call
+
+
+
+expression : NAME -> variable
+        | NAME OPPTR exprint -> ambig
+        | exprint OPPTR NAME -> ambig
+        | exprptr -> appeptr 
+        | exprint -> appexpr
 
 start: func* main func*
 
-parameter : type NAME -> parameter
+parameter : TYPE NAME -> parameter
 arglist : ( parameter ",")* parameter | -> no_var
 given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
 command : NAME "=" expression ";" -> assignment
+        | "*"+ "(" exprptr ")" "=" expression ";"
+        | "*" NAME "=" expression ";"
         | command* command -> sequence
         | "pass" ";"    -> pass
         | if else -> if_else
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
         | "print" "(" format "," expression ")" ";"            -> print
-        | type NAME ";" -> declaration
+        | TYPE NAME ";" -> declaration
         | func_call ";" -> function_call
         | "return" expression ";" -> return
 

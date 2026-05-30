@@ -24,10 +24,10 @@ def pp_args(ast):
     if ast.data == "arglist":
 
         arglist = ast.children
-        res =  f"{arglist[0].children[0].children[0]} {arglist[0].children[1].value}"
+        res =  f"{arglist[0].children[0].value} {arglist[0].children[1].value}"
         if len(ast.children) > 1 :
             for i in range(1 ,len(ast.children)):
-                res += f" , {ast.children[i].children[0].children[0]} {ast.children[i].children[1].value}"
+                res += f" , {ast.children[i].children[0].value} {ast.children[i].children[1].value}"
         return res
   
 
@@ -45,7 +45,7 @@ def pp_command(ast):
     if ast.data == 'declaration' :
         val = ""
         if len(ast.children) > 1 : val = f" {ast.children[1]}"
-        return f"""{ast.children[0].children[0]} {val}  """
+        return f"""{ast.children[0].value} {val}  """
 
     if ast.data == "if_else":
         test = pp_expression(ast.children[0].children[0])
@@ -86,6 +86,7 @@ if __name__ == "__main__":
 
     l = lark.Lark(gram)
     t = l.parse(script, start = "start")
-    print(pp_command(t.children[0]))
+    print(t.pretty())
+    # print(pp_command(t.children[0]))
 
 
