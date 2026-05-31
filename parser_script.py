@@ -1,6 +1,7 @@
 import os
 import lark
-# from pretty_printer_script import *
+from pretty_printer_script import *
+from asm_expression import *
 
 
 path = "cours_script"
@@ -12,6 +13,7 @@ with open(grammar_path) as f:
 
 gram = f''' {grammar} '''
 
+var_data_rec = ( 'parameter',   'sequence', 'if_else', 'while',  "main", "start")
 
 registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
 
@@ -23,108 +25,17 @@ funcs_arg_len = dict() #Has to be global to check if func calls respec nb args o
 #The code is parsed
 
 
-def asm_expression(ast, parameters = None):
-
-    if ast.data == "parenthesis": 
-        return f"""
-        {asm_expression(ast.children[0], parameters)}
-        """
-    if ast.data in  ( "variable" , "int" ):
-        if ast.data == "variable":
-            if parameters != None and ast.children[0].value in parameters : 
-                return f"mov rax, {getRegister(ast.children[0].value , parameters )}"
-            return f"mov rax, [{ast.children[0].value}]"
-        else: return f"mov rax, {ast.children[0].value}"
-    
-    if ast.data == "function_call":
-        ensure_correct_args_func(ast)
-        arg_reg = ""
-        arg_script = ""
-        end_func_arg_script = ""
-        kid_idx = 0
-        for kid in ast.children[0].children[1].children:
-            arg_script += asm_expression(kid, parameters)
-            arg_script += f"""
-            push {getRegister(kid, ast.children[0].children[1].children)}
-            mov {getRegister(kid, ast.children[0].children[1].children)} , rax
-            """
-            end_func_arg_script += f"""
-            pop {getRegister(kid, ast.children[0].children[1].children)}
-            """
-        
-        return ";This is a function call\n" + arg_script + "\n" + arg_reg + "\n" + "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
-
-    if ast.data == "bin":
-        op = f"{ast.children[1].value}"
-        command = "no command"
-        if op == "+" : command = "add"
-        if op == "-" : command = "sub"
-        if op == "*" : command = "imul "
-        if op == "/" : command = "div"#"div " + lo + " , " + ro
-        boolean = ""
-        if op == "<" : 
-            command = "cmp"
-            boolean = f"""setl al
-            movzx rax, al"""
-        
-        if op == "<=" : 
-            command = "cmp"
-            boolean = f"""setle al
-            movzx rax, al"""
-        
-
-        if op == ">" : 
-            command = "cmp"
-            boolean = f"""setg al
-            movzx rax, al"""
-        
-
-        if op == ">=" : 
-            command = "cmp"
-            boolean = f"""setge al
-            movzx rax, al"""
-
-        
-        if op == "==" : 
-            command = "cmp"
-            boolean = f"""sete al
-            movzx rax, al"""
-
-        if ast.data == "dereferencing":
-            None
-
-        return f""" 
-            {asm_expression(ast.children[2], parameters)}
-            push rax
-            {asm_expression(ast.children[0], parameters)}
-            pop rbx
-            {command} rax, rbx
-            {boolean}
-        """
-
-    if ast.data == "dereferencing":
-        pass
-
-    print("wrong ast dans expr", ast)
-
-    raise AssertionError("Wrong or not implemented")
-
-
-    
-
-
-
 
 
 def asm_declare_vars_list(ast, vars):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
-    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call', "arglist", "no_var") : return 
+    # if ast.data in ignore_data : return 
     if ast.data == 'declaration' :
-        print("\ndecl var\n", ast)
         return ast.children[1].value + ": dq 0 " 
-    else:
+    if ast.data in var_data_rec:
         #Appel récursif car ça n'est pas une declaration donc il faut itérer plus loin dans l'arbre
         # print(f"esle is called on {type(ast.children[0])}")
+        
         for i in range(len(ast.children)):
             val = asm_declare_vars_list( ast.children[i] , vars )
             if val != None: vars.append(val)
@@ -149,7 +60,7 @@ mov [{v}], rax
 
 
 def asm_infunc_declare_vars_list(ast, vars):
-    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call','arglist', "no_var") : return 
+    # if ast.data in ignore_data : return 
     if ast.data == 'declaration' :
         
         if len(ast.children) == 1:
@@ -168,7 +79,7 @@ def asm_infunc_declare_vars_list(ast, vars):
                     printed_string = printed_string.replace(r"\n",  ' ",10," ' )
                     return ast.children[0] + f" : {alloc_command} " + printed_string + ", 0"
             return (ast.children[0].value, printed_string)
-    else:
+    if ast.data in var_data_rec:
         for i in range(len(ast.children)):
             
             val = asm_infunc_declare_vars_list( ast.children[i] , vars )
@@ -189,8 +100,6 @@ def asm_command(ast, parameters = None):
     if ast.data == "assignment":
 
 
-        print("command ast", ast.pretty())
-        print(ast.children[0], "\n", ast.children[1])
         if ast.children[0].data == "variable":
         # asm_lvalue = ast.children[0].data
             
@@ -229,7 +138,8 @@ def asm_command(ast, parameters = None):
 
             
 
-        
+    if ast.data == "addressing":
+        return asm_adressing(ast) 
         
         
 

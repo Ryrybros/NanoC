@@ -2,11 +2,12 @@
 
 main(){
     int a;
-    a=2;
-    a = a+1;
-    int b;
-    b =a;
-    print(int, b);
+    a = 4;
+    int* b;
+    b = &a;
+    int c;
+    c = *b;
+    print(int, c);
     return 0;
 }
 

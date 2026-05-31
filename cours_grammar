@@ -3,15 +3,15 @@ OPBIN: /[+\-*\/<>]/
 OPPTR: /[+\-]/
 TYPE_STR : "str"
 TYPE_INT : "int"
-PTR : "int" "*"+
+POINTER_ORDER : "*"+
+PTR : "int" POINTER_ORDER
 
 TYPE : "int" | "str" | PTR | "void"
 
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
- 
 
-deref :  "*"+ NAME -> single_deref | "*"+ "(" expression ")" -> expr_deref
+deref :  POINTER_ORDER NAME -> single_deref | POINTER_ORDER "(" expression ")" -> expr_deref
 
 exprstr : STRING -> str
            | NAME -> variable
