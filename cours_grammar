@@ -11,7 +11,7 @@ format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
  
 
-deref :  "*"+ NAME | "*"+ "(" expression ")"
+deref :  "*"+ NAME -> single_deref | "*"+ "(" expression ")" -> expr_deref
 
 exprstr : STRING -> str
            | NAME -> variable
@@ -24,9 +24,9 @@ expression : NAME -> variable
         | SIGNED_NUMBER -> int 
         | "null" -> nullptr
         | func_call -> function_call
-        | deref
+        | deref -> dereferencing
 
-leftexpression : NAME | deref
+leftexpression : NAME -> variable | deref -> dereferencing
 
 
 
@@ -38,14 +38,16 @@ given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
-command : leftexpression "=" expression ";" -> assignement
-        | NAME "=" exprstr ";"
+command : leftexpression "=" expression ";" -> assignment
+        | leftexpression "=" "&" NAME ";" -> addressing
+        | NAME "=" exprstr ";" -> assignement_str
+        | leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | command* command -> sequence
         | "pass" ";"    -> pass
         | if else -> if_else
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
-        | "print" "(" format "," expression ")" ";"            -> print
+        | "print" "(" format "," expression ")" ";" -> print
         | TYPE NAME ";" -> declaration
         | func_call ";" -> function_call
         | "return" expression ";" -> return

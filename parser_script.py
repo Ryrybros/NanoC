@@ -54,134 +54,74 @@ def asm_expression(ast, parameters = None):
         
         return ";This is a function call\n" + arg_script + "\n" + arg_reg + "\n" + "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
 
-    op = f"{ast.children[1].value}"
-    command = "no command"
-    if op == "+" : command = "add"
-    if op == "-" : command = "sub"
-    if op == "*" : command = "imul "
-    if op == "/" : command = "div"#"div " + lo + " , " + ro
-    boolean = ""
-    if op == "<" : 
-        command = "cmp"
-        boolean = f"""setl al
-        movzx rax, al"""
-    
-    if op == "<=" : 
-        command = "cmp"
-        boolean = f"""setle al
-        movzx rax, al"""
-    
-
-    if op == ">" : 
-        command = "cmp"
-        boolean = f"""setg al
-        movzx rax, al"""
-    
-
-    if op == ">=" : 
-        command = "cmp"
-        boolean = f"""setge al
-        movzx rax, al"""
-
-    
-    if op == "==" : 
-        command = "cmp"
-        boolean = f"""sete al
-        movzx rax, al"""
-
-    
-
-    return f""" 
-        {asm_expression(ast.children[2], parameters)}
-        push rax
-        {asm_expression(ast.children[0], parameters)}
-        pop rbx
-        {command} rax, rbx
-        {boolean}
-    """
-
-
-    
-
-
-
-
-
-
-def pp_args(ast):
-    
-    if ast.data == "arglist":
-        arglist = ast.children
-        res =  f"{arglist[0].children[0].value}"
-        if len(ast.children) > 1 :
-            for i in range(1 ,len(ast.children)):
-                res += f" , {ast.children[i].children[0].value}"
-        return res
-    
-def pp_command(ast, parameters):
-
-    if ast.data == "assignment":
-        lvalue = ast.children[0].value
-        if lvalue in parameters : lvalue = f"(param {lvalue})"
-        rvalue = pp_expression(ast.children[1], parameters)
-        return f"{lvalue}  =  {rvalue}"
-    if ast.data == "sequence":
-        command = pp_command(ast.children[0], parameters)
-        following = pp_command(ast.children[1], parameters)
-        return f"{command}\n{following}"
-
-    if ast.data == "if_else":
-        test = pp_expression(ast.children[0].children[0], parameters)
-        script = pp_command(ast.children[0].children[1], parameters)
-        res =  f"if ( {test} ) \n  {script} "
-        if len(ast.children) > 1:
-            escript = pp_command(ast.children[1].children[0], parameters)
-            res += f"\nelse\n  {escript} "
-        return res
-    
-    if ast.data == "while":
-        test = pp_expression(ast.children[0], parameters)
-        script = pp_command(ast.children[1], parameters)
-        return  f"while ( {test} ) \n  xor al , al {script} "
+    if ast.data == "bin":
+        op = f"{ast.children[1].value}"
+        command = "no command"
+        if op == "+" : command = "add"
+        if op == "-" : command = "sub"
+        if op == "*" : command = "imul "
+        if op == "/" : command = "div"#"div " + lo + " , " + ro
+        boolean = ""
+        if op == "<" : 
+            command = "cmp"
+            boolean = f"""setl al
+            movzx rax, al"""
+        
+        if op == "<=" : 
+            command = "cmp"
+            boolean = f"""setle al
+            movzx rax, al"""
         
 
-    if ast.data == "main":
-        args = pp_args(ast.children[0])
-        script = pp_command(ast.children[1], parameters)
-        returned = pp_expression(ast.children[2].children[0], parameters)
-        return f"main ( {args} )\n {script} \n return {returned}  "
-
-    if ast.data == "function_call":
+        if op == ">" : 
+            command = "cmp"
+            boolean = f"""setg al
+            movzx rax, al"""
         
-        return f"""
-        call
-        {ast.children[0].children[0]}{[kid.children[0].value  for kid in ast.children[0].children[1].children ]}
+
+        if op == ">=" : 
+            command = "cmp"
+            boolean = f"""setge al
+            movzx rax, al"""
+
+        
+        if op == "==" : 
+            command = "cmp"
+            boolean = f"""sete al
+            movzx rax, al"""
+
+        if ast.data == "dereferencing":
+            None
+
+        return f""" 
+            {asm_expression(ast.children[2], parameters)}
+            push rax
+            {asm_expression(ast.children[0], parameters)}
+            pop rbx
+            {command} rax, rbx
+            {boolean}
         """
 
-    if ast.data == "return":
-        
-        return "return " + pp_expression(ast.children[0]) + "\n"
+    if ast.data == "dereferencing":
+        pass
+
+    print("wrong ast dans expr", ast)
+
+    raise AssertionError("Wrong or not implemented")
 
 
-    return "Wrong or not implemented"
+    
+
+
+
 
 
 def asm_declare_vars_list(ast, vars):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
-    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call', "arglist") : return 
+    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call', "arglist", "no_var") : return 
     if ast.data == 'declaration' :
-        
-        if len(ast.children) == 1:
-            return ast.children[0] + ": dq 0 " 
-        elif len(ast.children) == 2:
-            alloc_command = "dq"
-            printed_string = ast.children[1].value
-            if ast.children[1].type == "STRING": 
-                alloc_command = "db" 
-                printed_string = str(ast.children[1])
-                printed_string = printed_string.replace(r"\n",  ' ",10," ' )
-                return ast.children[0] + f" : {alloc_command} " + printed_string + ", 0"
-            return ast.children[0] + f" : {alloc_command} " + printed_string  
+        print("\ndecl var\n", ast)
+        return ast.children[1].value + ": dq 0 " 
     else:
         #Appel récursif car ça n'est pas une declaration donc il faut itérer plus loin dans l'arbre
         # print(f"esle is called on {type(ast.children[0])}")
@@ -209,7 +149,7 @@ mov [{v}], rax
 
 
 def asm_infunc_declare_vars_list(ast, vars):
-    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call','arglist') : return 
+    if ast.data in ( 'variable' , 'int', "bin", 'assignment', 'format_str', 'format_int','function','function_call','arglist', "no_var") : return 
     if ast.data == 'declaration' :
         
         if len(ast.children) == 1:
@@ -247,37 +187,47 @@ def asm_declare_vars(vars : list):
 def asm_command(ast, parameters = None):
     
     if ast.data == "assignment":
-        if ast.children[1].data == 'int':
-            if parameters != None and ast.children[0] in parameters:
-                return f"mov {getRegister(ast.children[0], parameters)} , " + ast.children[1].children[0].value + "\n"
-            return "mov qword [" + ast.children[0] + "] , " + ast.children[1].children[0].value + "\n"
 
-        if (ast.children[1].data == 'bin') :
-            if (parameters != None) and ast.children[0].value in parameters:
+
+        print("command ast", ast.pretty())
+        print(ast.children[0], "\n", ast.children[1])
+        if ast.children[0].data == "variable":
+        # asm_lvalue = ast.children[0].data
+            
+            # if ast.children[1].data == 'int':
+            #     if parameters != None and ast.children[0].children[0].value in parameters:
+            #         return f"mov {getRegister(ast.children[0].children[0].value, parameters)} , " + ast.children[1].children[0].value + "\n"
+            #     return "mov qword [" + ast.children[0].children[0] + "] , " + ast.children[1].children[0].value + "\n"
+
                 
-                if ast.children[1].data == 'function_call':
-                    if ast.children[1].children[0].children[0].value not in funcs_arg_len : 
+
+            # if (ast.children[1].data == 'bin') :
+            if (parameters != None) and ast.children[0].children[0].value in parameters:
                 
-                        raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
-                    return f"""
-                    {asm_expression(ast.children[1])}
-                    mov {getRegister(ast.children[0].value,parameters)} , rax
-                    """
+                if ast.children[1].data == 'function_call' and ast.children[1].children[0].children[0].value not in funcs_arg_len : 
+                    raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
+                    # return f"""
+                    # {asm_expression(ast.children[1])}
+                    # mov {getRegister(ast.children[0].children[0].value,parameters)} , rax
+                    # """
 
                 return  f"""{asm_expression(ast.children[1], parameters)}
-                    mov {getRegister(ast.children[0].value, parameters)} , rax
+                    mov {getRegister(ast.children[0].children[0].value, parameters)} , rax
                 """
-            return f"""
+            else: 
+                return f"""
                     {asm_expression(ast.children[1], parameters)}
-                    mov qword [{ast.children[0].value}] , rax
-            """
-        
-        if ast.children[1].data == 'function_call':
-            ensure_correct_args_func(ast.children[1])
-            return f"""
-            {asm_expression(ast.children[1])}
-            mov qword [{ast.children[0].value}] , rax
-            """
+                    mov qword [{ast.children[0].children[0].value}] , rax
+                """
+            
+            if ast.children[1].data == 'function_call':
+                ensure_correct_args_func(ast.children[1])
+                return f"""
+                {asm_expression(ast.children[1])}
+                mov qword [{ast.children[0].value}] , rax
+                """
+
+            
 
         
         
@@ -395,9 +345,9 @@ def asm_command(ast, parameters = None):
 
 
 
-    # print(f"wrong ast : {ast}")
+    print(f"wrong ast : {ast}")
     
-    return "Wrong or not implemented"
+    raise AssertionError("Wrong or not implemented")
 
 def getRegister(arg : str , parameters : list):
     assert arg in parameters
@@ -490,7 +440,7 @@ def asm_main(ast):
     # print(f"wrong in main ast : {ast}")
 
     
-    return "Wrong or not implemented", "Wrong or not implemented"
+    raise AssertionError("Wrong or not implemented")
     
 
 
@@ -538,20 +488,6 @@ def run(code = script):
     assembly(code)
     os.system("./tuto_assembly/build.sh tuto_assembly/test.asm")
 
-def pp_func(ast):
-    func = f""
-    for child in ast.children:
-        if child.data == "function":
-            script = child.children[2]
-            params = [kid.children[0].value for kid in child.children[1].children ]
-            
-            func += f""" {child.children[0]}({[kid.children[0].value for kid in child.children[1].children ]})
-
-            {pp_command(script, params)}
-            """
-            func += "\n \n"
-    print(func)
-    
 
 
 if __name__ == '__main__':
