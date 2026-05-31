@@ -9,31 +9,26 @@ TYPE : "int" | "str" | PTR | "void"
 
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
-         
-exprint :  SIGNED_NUMBER -> int
-            | exprint OPBIN exprint -> bin
-            | "(" exprint ")" -> parenthesis
-            | func_call -> function_call
-            | deref
+ 
 
-deref :  "*"+ NAME | "*"+ "(" exprptr ")"
+deref :  "*"+ NAME | "*"+ "(" expression ")"
 
 exprstr : STRING -> str
-           | func_call -> function_call
            | NAME -> variable
-
-exprptr : "null" -> nullptr
-           | NAME OPPTR exprint -> oppexpr
-           | exprint OPPTR NAME -> oppexpr
-           | func_call -> function_call
 
 
 
 expression : NAME -> variable
-        | NAME OPPTR exprint -> ambig
-        | exprint OPPTR NAME -> ambig
-        | exprptr -> appeptr 
-        | exprint -> appexpr
+        | expression OPBIN expression -> bin
+        | "(" expression ")" -> parenthesis
+        | SIGNED_NUMBER -> int 
+        | "null" -> nullptr
+        | func_call -> function_call
+        | deref
+
+leftexpression : NAME | deref
+
+
 
 start: func* main func*
 
@@ -43,9 +38,8 @@ given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
-command : NAME "=" expression ";" -> assignment
-        | "*"+ "(" exprptr ")" "=" expression ";"
-        | "*" NAME "=" expression ";"
+command : leftexpression "=" expression ";" -> assignement
+        | NAME "=" exprstr ";"
         | command* command -> sequence
         | "pass" ";"    -> pass
         | if else -> if_else

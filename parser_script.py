@@ -226,8 +226,8 @@ def asm_infunc_declare_vars_list(ast, vars):
                     alloc_command = "db" 
                     printed_string = str(ast.children[1])
                     printed_string = printed_string.replace(r"\n",  ' ",10," ' )
-                    return ast.children[0].children[0] + f" : {alloc_command} " + printed_string + ", 0"
-            return (ast.children[0].children[0].value, printed_string)
+                    return ast.children[0] + f" : {alloc_command} " + printed_string + ", 0"
+            return (ast.children[0].value, printed_string)
     else:
         for i in range(len(ast.children)):
             

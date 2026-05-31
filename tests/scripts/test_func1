@@ -1,12 +1,9 @@
 
 main(){
     int c;
-    str endl = "\n";
 
     c = hello();
-    print(str, endl);
     print(int,c);
-    print(str, endl);
     return 0; 
 }
 
