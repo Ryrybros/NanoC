@@ -5,8 +5,8 @@ main(){
     b = &a;
     int c;
     c = *b;
-    a = 2*f(100, b) + 1;
     print(int, a);
+    c = b;
     
     return 0;
 }
