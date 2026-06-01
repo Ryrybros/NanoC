@@ -2,3 +2,21 @@
 This is a compilation project where a group of 3 students create their own language, the language is parsed using LARK and compiled using assembly.
 
 To compile using variables of the main function, for instance main(arg1, arg2, arg3, ...) run "bash compile.sh arg1 arg2 arg3 ...". The arguments of main are necessary int.
+
+Opération interdite : 
+
+&expression, que &NAME
+
+int[] *** : adressage de tableau
+
+
+python parser : 
+verif que on prend pas l'adresse d'un type tableau
+verif meme type dans un tableau
+
+
+en creant un pointer p, on a p[7] donc aucune secu memoire
+
+Ne marche pas car on ne prend pas l'adresse des tableaux statiques    g = *i[8] <=> g = (*i)[8]; mais quand est il des dynamiques ? on doit faire une étape intermédiaire
+
+

@@ -9,7 +9,7 @@ TAB_ORDER : ("[" NUMBER "]")+
 tab : "int" TAB_ORDER -> int_tab
     | ptr TAB_ORDER   -> ptr_tab
 
-TYPE : "int" -> type_int
+type : "int" -> type_int
      | "str" -> type_str
      | ptr   -> type_ptr
      | "void" -> type_void
@@ -45,7 +45,7 @@ leftexpression : NAME -> variable | deref -> dereferencing | eltab -> eltab_writ
 
 start: func* main func*
 
-parameter : TYPE NAME -> parameter
+parameter : type NAME -> parameter
 arglist : ( parameter ",")* parameter | -> no_var
 given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
@@ -61,7 +61,7 @@ command : leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> 
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
         | "print" "(" format "," expression ")" ";" -> print
-        | TYPE NAME ";" -> declaration
+        | type NAME ";" -> declaration
         | func_call ";" -> function_call
         | "return" expression ";" -> return
 
