@@ -20,4 +20,6 @@ en creant un pointer p, on a p[7] donc aucune secu memoire
 Ne marche pas car on ne prend pas l'adresse des tableaux statiques    g = *i[8] <=> g = (*i)[8]; mais quand est il des dynamiques ? on doit faire une étape intermédiaire
 pour for : var muette i a initialiser dans data/scope des fcts, puis transfo for en while
 
+Supprimer ttes les branches sauf main
+
 
