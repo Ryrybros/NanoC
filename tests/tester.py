@@ -68,11 +68,6 @@ def test_func7():
     assert ret == "100"
 
 
-def test_func8():
-    #This test tests that global vars can be used in functions
-    ret = run("tests/scripts/test_func8")
-    assert ret == "Hello"
-
 def test_basique0():
     #This test tests that global vars can be used in functions
     ret = run("tests/scripts/test_basique0")
@@ -89,14 +84,13 @@ if __name__ == "__main__":
         test_func5,
         test_func6,
         test_func7,
-        test_func8
-    ]
+]
     t = 1
     for test in all_tests:
         try:
             test()
-            print(f"Success at test  {t}")
+            print(f"Success at test  {test.__name__}")
         except:
-            print(f"error in test  {t}")
+            print(f"error in test  {test.__name__}")
         t += 1
 

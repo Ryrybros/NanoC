@@ -1,18 +1,16 @@
 
 main(){
     int c;
-    str endl = "\n";
+    
     while(hallo(c + 1) < 30){
         c = c + 1 ;
     }
-    print(str, endl);
-    print(int,c);
-    print(str, endl);
+    print(int, c);
     return 0; 
 }
 
 
-func hello(x){
+func hello(int x){
     int a;
     a = 10 + x;
     x = a +20;
@@ -20,6 +18,6 @@ func hello(x){
     return a;
 }
 
-func hallo(x){
+func hallo(int x){
     return x*x;
 }

@@ -1,6 +1,6 @@
 
 
-func fib(n){
+func fib(int n){
     
     if(n < 2){
         return n ;
@@ -10,16 +10,17 @@ func fib(n){
 }
 
 main(){
-    int c = 10;
+    int c ;
+    c = 10;
     c = fib(c);
-    str endl = "\n";
-    print(str, endl);
+    
+    
     print(int,c);
-    print(str, endl);
+    
     return 0; 
 }
 
 
-func hallo(x){
+func hallo(int x){
     return x*x;
 }

@@ -10,32 +10,37 @@ c: dq 0
    global main
     section .text
             ;This is a function
-            hello:                    ;Name of func
+            f:                    ;Name of func
 
             push rbp
             mov rbp, rsp
             
                     
                     sub rsp, 16
-                mov qword [rbp - 8],a
+                mov qword [rbp - 8], 0 
 
             
+                    mov rax, 10
+                    mov qword [rbp - 8] , rax
+                
                      
+            mov rax, rdi
+            push rax
+             
             mov rax, 1
             push rax
-            mov rax, [a]
+            mov rax, [rbp - 8]
             pop rbx
             add rax, rbx
             
         
-                    mov qword [a] , rax
+            pop rbx
+            add rax, rbx
+            
+        
+                    mov qword [rbp - 8] , rax
                 
-                    mov rdi, asm_int_prtr
-                    mov rsi, [a]
-                    xor rax, rax
-                    call printf
-                
-        mov rax, 0
+        mov rax, [rbp - 8]
         mov rsp, rbp           
         pop rbp     
         ret
@@ -59,8 +64,39 @@ c: dq 0
     mov rax, [rax]
                     mov qword [c] , rax
                 
+                     
+            mov rax, 1
+            push rax
+             
+            ;This is a function call
+mov rax, 100
+            push rdi
+            mov rdi , rax
+            mov rax, [b]
+            push rsi
+            mov rsi , rax
+            
+
+call f;end_func_call
+
+            pop rdi
+            
+            pop rsi
+            
+            push rax
+            mov rax, 2
+            pop rbx
+            imul  rax, rbx
+            
+        
+            pop rbx
+            add rax, rbx
+            
+        
+                    mov qword [a] , rax
+                
                     mov rdi, asm_int_prtr
-                    mov rsi, [c]
+                    mov rsi, [a]
                     xor rax, rax
                     call printf
                 
