@@ -1,6 +1,5 @@
 
 OPBIN: /==|>=|<=|[+\-*\/<>]/
-OPPTR: /[+\-]/
 TYPE_STR : "str"
 TYPE_INT : "int"
 POINTER_ORDER : "*"+
@@ -53,10 +52,10 @@ return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
 for: "for" "(" "int" NAME "=" expression ";" NAME "<" expression ";" NAME"++" ")" "{" command "}"
-command : leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> assignment
+command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
+        | leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> assignment
         | leftexpression "=" "&" NAME ";" -> addressing
         | NAME "=" exprstr ";" -> assignement_str
-        | leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | command* command -> sequence
         | "pass" ";"    -> pass
         | if else -> if_else
