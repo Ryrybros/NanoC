@@ -9,11 +9,9 @@ TAB_ORDER : ("[" NUMBER "]")+
 tab : "int" TAB_ORDER -> int_tab
     | ptr TAB_ORDER   -> ptr_tab
 
-TYPE : "int" -> type_int
-     | "str" -> type_str
-     | ptr   -> type_ptr
-     | "void" -> type_void
-     | tab   -> type_tab
+type : "int" | "str"| "void"
+     | ptr -> type_ptr
+     | tab -> type_tab
 
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
@@ -24,8 +22,8 @@ exprstr : STRING -> str
         | NAME -> variable
 
 tableau: "[" (NAME ",")* NAME "]"
-   | "[" (SIGNED_NUMBER ",")* SIGNED_NUMBER "]"
-   | "[" (tableau ",")* tableau "]"
+       | "[" (SIGNED_NUMBER ",")* SIGNED_NUMBER "]"
+       | "[" (tableau ",")* tableau "]"
 eltab: NAME "[" expression "]" -> simple_tab
      | eltab "[" expression "]" -> tab_tab
 
@@ -38,6 +36,7 @@ expression : NAME -> variable
         | func_call -> function_call
         | deref -> dereferencing
         | eltab -> eltab_read
+        | "len" "(" expression ")" -> len
 
 leftexpression : NAME -> variable | deref -> dereferencing | eltab -> eltab_write
 
@@ -45,12 +44,13 @@ leftexpression : NAME -> variable | deref -> dereferencing | eltab -> eltab_writ
 
 start: func* main func*
 
-parameter : TYPE NAME -> parameter
+parameter : type NAME -> parameter
 arglist : ( parameter ",")* parameter | -> no_var
 given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
+for: "for" "(" "int" NAME "=" expression ";" NAME "<" expression ";" NAME"++" ")" "{" command "}"
 command : leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> assignment
         | leftexpression "=" "&" NAME ";" -> addressing
         | NAME "=" exprstr ";" -> assignement_str
@@ -60,8 +60,9 @@ command : leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> 
         | if else -> if_else
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
+        | for -> for
         | "print" "(" format "," expression ")" ";" -> print
-        | TYPE NAME ";" -> declaration
+        | type NAME ";" -> declaration
         | func_call ";" -> function_call
         | "return" expression ";" -> return
 
