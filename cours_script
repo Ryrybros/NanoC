@@ -1,11 +1,13 @@
 main(){
     int a;
     a = 4;
-    int* b;
+    int** b;
     b = &a;
     int c;
-    c = *b;
-    a = 2*f(100, b) + 1;
+    
+    int* e;
+    a = a + b ;
+    
     print(int, a);
     
     return 0;

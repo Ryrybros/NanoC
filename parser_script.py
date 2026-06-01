@@ -121,8 +121,7 @@ def getRegister(arg : str , parameters : list):
     
     if index < len(registers):    return registers[index]
 
-def asm_expression(ast, variables_dict = dict() , parameters = None, parameters_types = None):
-
+def asm_compare_types_expression(ast, variables_dict : dict):
     if ast.data == "parenthesis": 
         return f"""
         {asm_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)}
@@ -133,7 +132,54 @@ def asm_expression(ast, variables_dict = dict() , parameters = None, parameters_
             assert type(variables_dict) == dict
             assert(len(variables_dict) >= 1)
 
-            
+            return variables_dict[ast.children[0].value]
+        return "int"
+
+    if ast.data == "function_call":
+        ensure_correct_args_func(ast)
+        arg_reg = ""
+        arg_script = ""
+        end_func_arg_script = ""
+        kid_idx = 0
+        for kid in ast.children[0].children[1].children:
+            arg_script += asm_expression(kid, variables_dict= variables_dict)
+            arg_script += f"""
+            push {getRegister(kid, ast.children[0].children[1].children)}
+            mov {getRegister(kid, ast.children[0].children[1].children)} , rax
+            """
+            end_func_arg_script += f"""
+            pop {getRegister(kid, ast.children[0].children[1].children)}
+            """
+        
+        return ";This is a function call\n" + arg_script + "\n" + arg_reg + "\n" + "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
+
+    if ast.data == "bin":
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict)
+        type2 = asm_compare_types_expression(ast.children[2], variables_dict= variables_dict) 
+        if type1 != type2  : raise TypeError(f"Wrong Type binary operation between {type1} and {type2}") 
+        
+        return type1
+    if ast.data == "dereferencing":
+        return asm_dereferencing_value(ast)
+
+    # if ast.data == "nullptr":
+    #     return asm_dereferencing(ast)
+
+
+    raise AssertionError("Wrong or not implemented", ast)
+
+
+def asm_expression(ast, variables_dict :dict , parameters = None, parameters_types = None):
+
+    if ast.data == "parenthesis": 
+        return f"""
+        {asm_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)}
+        """
+    if ast.data in  ( "variable" , "int" ):
+        if ast.data == "variable":
+            # print(ast.children[0])
+            assert type(variables_dict) == dict
+            assert(len(variables_dict) >= 1)
             if parameters != None and ast.children[0].value in parameters : 
                 return f"mov rax, {getRegister(ast.children[0].value , variables_dict = variables_dict, parameters=parameters )}"
             return f"mov rax, [{ast.children[0].value}]"
@@ -158,7 +204,6 @@ def asm_expression(ast, variables_dict = dict() , parameters = None, parameters_
         return ";This is a function call\n" + arg_script + "\n" + arg_reg + "\n" + "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
 
     if ast.data == "bin":
-        print(ast)
         
         op = f"{ast.children[1].value}"
         command = "no command"
@@ -201,7 +246,7 @@ def asm_expression(ast, variables_dict = dict() , parameters = None, parameters_
         return f""" 
             {asm_expression(ast.children[2], variables_dict= variables_dict, parameters=parameters)}
             push rax
-            {asm_expression(ast.children[0], variables_dict=variables_dict, parameters=parameters)}
+            {asm_expression(ast.children[0],  variables_dict=variables_dict, parameters=parameters)}
             pop rbx
             {command} rax, rbx
             {boolean}
@@ -330,7 +375,10 @@ def asm_adressing(ast):
 def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_types = None):
     
     if ast.data == "assignment":
-
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict)
+        type2 = asm_compare_types_expression(ast.children[1], variables_dict= variables_dict) 
+        if  type1 != type2 : raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}")  
+        
 
         if ast.children[0].data == "variable":            
 
@@ -338,12 +386,12 @@ def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_t
                 
                 if ast.children[1].data == 'function_call' and ast.children[1].children[0].children[0].value not in funcs_arg_len : 
                     raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
-                   
+                    asm_compare_types_expression(ast.children[1])
                 return  f"""{asm_expression(ast.children[1], variables_dict= variables_dict , parameters= parameters)}
                     mov {getRegister(ast.children[0].children[0].value, variables_dict = variables_dict, parameters=parameters)} , rax
                 """
             else: 
-
+                asm_compare_types_expression(ast.children[1], variables_dict= variables_dict)
                 return f"""
                     {asm_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters)}
                     mov qword [{ast.children[0].children[0].value}] , rax
