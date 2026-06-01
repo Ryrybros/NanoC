@@ -1,5 +1,25 @@
+funcs_arg_len = dict() #Has to be global to check if func calls respec nb args of funcs
 
-def asm_expression(ast, parameters = None):
+
+#The code is parsed
+
+def get_funcs_arg_len():
+    return funcs_arg_len
+
+def set_funcs_arg_len(other : dict):
+    funcs_arg_len = other
+
+
+registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
+
+
+def getRegister(arg : str , parameters : list):
+    assert arg in parameters
+    index = parameters.index(arg)
+    # print(parameters)
+    if index < len(registers):    return registers[index]
+
+def asm_expression(ast, parameters = None, parameters_types = None):
 
     if ast.data == "parenthesis": 
         return f"""
@@ -87,7 +107,14 @@ def asm_expression(ast, parameters = None):
     raise AssertionError("Wrong or not implemented", ast)
 
 
-    
+
+def ensure_correct_args_func(ast):
+    if ast.children[0].children[0].value not in funcs_arg_len : 
+            raise ValueError(f'Called function {ast.children[0].children[0].value} but it was never defined !')
+    nb_args = len(ast.children[0].children[1].children)
+    expected_nb_args = funcs_arg_len[ast.children[0].children[0].value] 
+    if  nb_args != expected_nb_args  : raise ValueError(f"Error : function {ast.children[0].children[0].value} expected {expected_nb_args} arguments but got {nb_args}" )
+        
 
 
 def asm_assign_dereferencing(ast):

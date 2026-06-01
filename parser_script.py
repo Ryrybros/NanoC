@@ -1,7 +1,7 @@
 import os
 import lark
 from pretty_printer_script import *
-from asm_expression import *
+
 
 
 path = "cours_script"
@@ -15,30 +15,27 @@ gram = f''' {grammar} '''
 
 var_data_rec = ( 'parameter',   'sequence', 'if_else', 'while',  "main", "start")
 
-registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
-
 cpt_if_while = [-1]
 
-funcs_arg_len = dict() #Has to be global to check if func calls respec nb args of funcs
 
 
-#The code is parsed
-
-
-
-
-def asm_declare_vars_list(ast, vars):
+def asm_declare_vars_list(ast, vars : dict):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
     # if ast.data in ignore_data : return 
     if ast.data == 'declaration' :
-        return ast.children[1].value + ": dq 0 " 
+        
+
+        vars[ast.children[1].value] =  ast.children[0].value  
+        return
     if ast.data in var_data_rec:
         #Appel récursif car ça n'est pas une declaration donc il faut itérer plus loin dans l'arbre
-        # print(f"esle is called on {type(ast.children[0])}")
+        
         
         for i in range(len(ast.children)):
-            val = asm_declare_vars_list( ast.children[i] , vars )
-            if val != None: vars.append(val)
+            asm_declare_vars_list( ast.children[i] , vars )
+            
+
+
 
 def asm_init_vars_main(ast):
     if len(ast.children) > 0:
@@ -59,73 +56,343 @@ mov [{v}], rax
     return "", ""
 
 
-def asm_infunc_declare_vars_list(ast, vars):
-    # if ast.data in ignore_data : return 
-    if ast.data == 'declaration' :
-        
-        if len(ast.children) == 1:
-            return (ast.children[0].value, "0") 
-        elif len(ast.children) == 2:
-            alloc_command = "dq"
-            
-            if (type(ast.children[1]) == type(ast)):
-                if ast.children[1].data == "parameter": printed_string = ast.children[1].children[0] 
-            else: 
-                printed_string = ast.children[1].value
-                
-                if ast.children[1].type == "STRING": 
-                    alloc_command = "db" 
-                    printed_string = str(ast.children[1])
-                    printed_string = printed_string.replace(r"\n",  ' ",10," ' )
-                    return ast.children[0] + f" : {alloc_command} " + printed_string + ", 0"
-            return (ast.children[0].value, printed_string)
-    if ast.data in var_data_rec:
-        for i in range(len(ast.children)):
-            
-            val = asm_infunc_declare_vars_list( ast.children[i] , vars )
-            if val != None: vars.append(val)
-
 
 
 def asm_declare_vars(vars : list):
     ret = ""
-    for var in vars: ret += f"{var}\n"
+    for var in vars: ret += f"{var[0]} : dq 0\n"
     return ret
 
 
 
 
-def asm_command(ast, parameters = None):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################Expressions###########################################
+
+funcs_arg_len = dict() #Has to be global to check if func calls respec nb args of funcs
+
+
+#The code is parsed
+
+registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
+
+
+def getRegister(arg : str , parameters : list):
+    assert arg in parameters
+    index = parameters.index(arg)
+    
+    if index < len(registers):    return registers[index]
+
+def asm_compare_types_expression(ast, variables_dict : dict):
+    if ast.data == "parenthesis": 
+        return asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
+    
+    if ast.data in  ( "variable" , "int" ):
+        if ast.data == "variable":
+            # print(ast.children[0])
+            assert type(variables_dict) == dict
+            assert(len(variables_dict) >= 1)
+
+            return variables_dict[ast.children[0].value]
+        return "int"
+
+    if ast.data == "function_call":
+        ensure_correct_args_func(ast)
+        arg_reg = ""
+        arg_script = ""
+        end_func_arg_script = ""
+        kid_idx = 0
+        for kid in ast.children[0].children[1].children:
+            arg_script += asm_expression(kid, variables_dict= variables_dict)
+            arg_script += f"""
+            push {getRegister(kid, ast.children[0].children[1].children)}
+            mov {getRegister(kid, ast.children[0].children[1].children)} , rax
+            """
+            end_func_arg_script += f"""
+            pop {getRegister(kid, ast.children[0].children[1].children)}
+            """
+        
+        return ";This is a function call\n" + arg_script + "\n" + arg_reg + "\n" + "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
+
+    if ast.data == "bin":
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict)
+        type2 = asm_compare_types_expression(ast.children[2], variables_dict= variables_dict) 
+        if type1 != type2  : raise TypeError(f"Wrong Type binary operation between {type1} and {type2}") 
+        
+        return type1
+    if ast.data == "dereferencing":
+        return "dereferencing"
+
+    # if ast.data == "nullptr":
+    #     return asm_dereferencing(ast)
+
+
+    raise AssertionError("Wrong or not implemented", ast)
+
+
+def asm_expression(ast, variables_dict :dict , parameters = None, parameters_types = None):
+
+    if ast.data == "parenthesis": 
+        return f"""
+        {asm_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)}
+        """
+    if ast.data in  ( "variable" , "int" ):
+        if ast.data == "variable":
+            # print(ast.children[0])
+            assert type(variables_dict) == dict
+            assert(len(variables_dict) >= 1)
+            if parameters != None and ast.children[0].value in parameters : 
+                return f"mov rax, {getRegister(ast.children[0].value , variables_dict = variables_dict, parameters=parameters )}"
+            return f"mov rax, [{ast.children[0].value}]"
+        else: return f"mov rax, {ast.children[0].value}"
+    
+    if ast.data == "function_call":
+        ensure_correct_args_func(ast)
+        arg_reg = ""
+        arg_script = ""
+        end_func_arg_script = ""
+        kid_idx = 0
+        for kid in ast.children[0].children[1].children:
+            arg_script += asm_expression(kid, variables_dict= variables_dict, parameters=parameters)
+            arg_script += f"""
+            push {getRegister(kid, ast.children[0].children[1].children)}
+            mov {getRegister(kid, ast.children[0].children[1].children)} , rax
+            """
+            end_func_arg_script += f"""
+            pop {getRegister(kid, ast.children[0].children[1].children)}
+            """
+        
+        return ";This is a function call\n" + arg_script + "\n" + arg_reg + "\n" + "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
+
+    if ast.data == "bin":
+        
+        op = f"{ast.children[1].value}"
+        command = "no command"
+        if op == "+" : command = "add"
+        if op == "-" : command = "sub"
+        if op == "*" : command = "imul "
+        if op == "/" : command = "div"#"div " + lo + " , " + ro
+        boolean = ""
+        if op == "<" : 
+            command = "cmp"
+            boolean = f"""setl al
+            movzx rax, al"""
+        
+        if op == "<=" : 
+            command = "cmp"
+            boolean = f"""setle al
+            movzx rax, al"""
+        
+
+        if op == ">" : 
+            command = "cmp"
+            boolean = f"""setg al
+            movzx rax, al"""
+        
+
+        if op == ">=" : 
+            command = "cmp"
+            boolean = f"""setge al
+            movzx rax, al"""
+
+        
+        if op == "==" : 
+            command = "cmp"
+            boolean = f"""sete al
+            movzx rax, al"""
+
+        if ast.data == "dereferencing":
+            None
+
+        return f""" 
+            {asm_expression(ast.children[2], variables_dict= variables_dict, parameters=parameters)}
+            push rax
+            {asm_expression(ast.children[0],  variables_dict=variables_dict, parameters=parameters)}
+            pop rbx
+            {command} rax, rbx
+            {boolean}
+        """
+
+    if ast.data == "dereferencing":
+        return asm_dereferencing_value(ast)
+
+    # if ast.data == "nullptr":
+    #     return asm_dereferencing(ast)
+
+    raise AssertionError("Wrong or not implemented", ast)
+
+
+
+def ensure_correct_args_func(ast):
+    if ast.children[0].children[0].value not in funcs_arg_len : 
+            raise ValueError(f'Called function {ast.children[0].children[0].value} but it was never defined !')
+    nb_args = len(ast.children[0].children[1].children)
+    expected_nb_args = funcs_arg_len[ast.children[0].children[0].value] 
+    if  nb_args != expected_nb_args  : raise ValueError(f"Error : function {ast.children[0].children[0].value} expected {expected_nb_args} arguments but got {nb_args}" )
+        
+
+
+def asm_assign_dereferencing(ast):
+    # accede a l'adresse du dereferencement
+    n = len(ast.children[0].children[0].value)
+    
+    # Met dans rax le contenu
+    deref = ""
+    for i in range(n-1):
+        deref += "    mov rax, [rax]\n"
+    if (ast.children[0].data == "single_deref"):
+        return f"""       
+    mov rax, [{ast.children[0].children[1].value}]     
+{deref}"""
+    if (ast.children[0].data == "expr_deref"):
+        return f"""       
+    {asm_expression(ast.children[0].children[1])}     
+{deref}"""
+
+    raise AssertionError("dereferencing not matched")
+
+def asm_dereferencing_value(ast):
+    # accede au contenue du dereferencement
+    return f""" {asm_assign_dereferencing(ast)}      
+    mov rax, [rax]"""
+
+def asm_declaration_pointeur(ast):
+    assert(len(ast.children) == 2)
+    return f"{ast.children[1].value} : dq 0\n"
+
+def asm_adressing(ast):
+    return f"""       
+    mov rax, QWORD {ast.children[1].value}
+    mov [{ast.children[0].children[0].value}], rax
+"""
+
+# def asm_dereferencing(ast):
+#     return f"""            
+#     {asm_contenu(ast.children[0])}
+# """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##########################################End_Expressions###########################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_types = None):
     
     if ast.data == "assignment":
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict)
+        type2 = asm_compare_types_expression(ast.children[1], variables_dict= variables_dict) 
+        if  type1 != type2 : raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}")  
+        
 
+        if ast.children[0].data == "variable":            
 
-        if ast.children[0].data == "variable":
-        # asm_lvalue = ast.children[0].data
-            
-            # if ast.children[1].data == 'int':
-            #     if parameters != None and ast.children[0].children[0].value in parameters:
-            #         return f"mov {getRegister(ast.children[0].children[0].value, parameters)} , " + ast.children[1].children[0].value + "\n"
-            #     return "mov qword [" + ast.children[0].children[0] + "] , " + ast.children[1].children[0].value + "\n"
-
-                
-
-            # if (ast.children[1].data == 'bin') :
             if (parameters != None) and ast.children[0].children[0].value in parameters:
                 
                 if ast.children[1].data == 'function_call' and ast.children[1].children[0].children[0].value not in funcs_arg_len : 
                     raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
-                    # return f"""
-                    # {asm_expression(ast.children[1])}
-                    # mov {getRegister(ast.children[0].children[0].value,parameters)} , rax
-                    # """
-
-                return  f"""{asm_expression(ast.children[1], parameters)}
-                    mov {getRegister(ast.children[0].children[0].value, parameters)} , rax
+                    asm_compare_types_expression(ast.children[1])
+                return  f"""{asm_expression(ast.children[1], variables_dict= variables_dict , parameters= parameters)}
+                    mov {getRegister(ast.children[0].children[0].value, variables_dict = variables_dict, parameters=parameters)} , rax
                 """
             else: 
+                asm_compare_types_expression(ast.children[1], variables_dict= variables_dict)
                 return f"""
-                    {asm_expression(ast.children[1], parameters)}
+                    {asm_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters)}
                     mov qword [{ast.children[0].children[0].value}] , rax
                 """
             
@@ -149,15 +416,15 @@ def asm_command(ast, parameters = None):
 
     if ast.data == "sequence":
         
-        command = asm_command(ast.children[0], parameters)
-        following = asm_command(ast.children[1], parameters)
+        command = asm_command(ast.children[0], variables_dict=variables_dict , parameters= parameters)
+        following = asm_command(ast.children[1], variables_dict= variables_dict,  parameters= parameters)
 
         return f"{command}{following}"
 
     if ast.data == "if_else":
-        test = asm_expression(ast.children[0].children[0], parameters)
-        script = asm_command(ast.children[0].children[1], parameters)
-        script_else = asm_command(ast.children[1].children[0], parameters)
+        test = asm_expression(ast.children[0].children[0], parameters= parameters)
+        script = asm_command(ast.children[0].children[1], parameters= parameters)
+        script_else = asm_command(ast.children[1].children[0], parameters= parameters)
 
         cpt_if_while[0] += 1
 
@@ -177,8 +444,8 @@ def asm_command(ast, parameters = None):
         """
         
     if ast.data == "while":        
-        test = asm_expression(ast.children[0], parameters)
-        script = asm_command(ast.children[1], parameters)
+        test = asm_expression(ast.children[0], parameters= parameters)
+        script = asm_command(ast.children[1], parameters=  parameters)
         cpt_if_while[0] += 1
 
         return  f"""
@@ -202,7 +469,7 @@ def asm_command(ast, parameters = None):
             elif ast.children[0].children[0] == "int" :
 
                 if parameters != None and  ast.children[1].children[0] in parameters:
-                    reg = getRegister(ast.children[1].children[0], parameters)
+                    reg = getRegister(ast.children[1].children[0], variables_dict = variables_dict, parameters= parameters)
                     # if reg == "rdi": reg = registers[len(parameters) - 1]
                     return f"""
                     
@@ -226,7 +493,7 @@ def asm_command(ast, parameters = None):
                 #HERE
         else : 
             
-            stret = asm_expression(ast.children[1], parameters)
+            stret = asm_expression(ast.children[1], parameters= parameters)
             
             if ast.children[0].children[0] == "int" :
                 return stret + f"""
@@ -238,13 +505,14 @@ def asm_command(ast, parameters = None):
     
     if ast.data == "function_call":
         ensure_correct_args_func(ast)
+        
         return f"""
-            {asm_expression(ast.children[0].children[0], parameters)}
+            {asm_expression(ast, parameters= parameters)}
         """
 
 
     if ast.data == "return":
-        returned = asm_expression(ast.children[0], parameters) #will put return into rax
+        returned = asm_expression(ast.children[0], variables_dict=variables_dict, parameters=parameters) #will put return into rax
         
         return f"""
         {returned}
@@ -259,17 +527,13 @@ def asm_command(ast, parameters = None):
     
     raise AssertionError("Wrong or not implemented")
 
-def getRegister(arg : str , parameters : list):
-    assert arg in parameters
-    index = parameters.index(arg)
-    if index < len(registers):    return registers[index]
 
-def ensure_correct_args_func(ast):
-    if ast.children[0].children[0].value not in funcs_arg_len : 
-            raise ValueError(f'Called function {ast.children[0].children[0].value} but it was never defined !')
-    nb_args = len(ast.children[0].children[1].children)
-    expected_nb_args = funcs_arg_len[ast.children[0].children[0].value] 
-    if  nb_args != expected_nb_args  : raise ValueError(f"Error : function {ast.children[0].children[0].value} expected {expected_nb_args} arguments but got {nb_args}" )
+# def ensure_correct_args_func(ast):
+#     if ast.children[0].children[0].value not in funcs_arg_len : 
+#             raise ValueError(f'Called function {ast.children[0].children[0].value} but it was never defined !')
+#     nb_args = len(ast.children[0].children[1].children)
+#     expected_nb_args = funcs_arg_len[ast.children[0].children[0].value] 
+#     if  nb_args != expected_nb_args  : raise ValueError(f"Error : function {ast.children[0].children[0].value} expected {expected_nb_args} arguments but got {nb_args}" )
         
 
 def asm_func(ast):
@@ -279,8 +543,8 @@ def asm_func(ast):
             
             args = child.children[1]
         
-            vars = []
-            asm_infunc_declare_vars_list(child.children[2], vars)
+            vars = dict()
+            asm_declare_vars_list(child.children[2], vars)
             
             if len(vars) != 0:
                 var_dec = f"""
@@ -289,11 +553,13 @@ def asm_func(ast):
                 """
             else: var_dec = ""
             
-            arg_list_to_replace = [kid.children[0].value for kid in child.children[1].children ]
+            arg_list_to_replace = [kid.children[1].value for kid in child.children[1].children ]
+            arg_list_to_replace_types = [kid.children[0].value for kid in child.children[1].children ]
 
             funcs_arg_len[child.children[0].value] = len(arg_list_to_replace)
 
-            script = asm_command(child.children[2], arg_list_to_replace)
+
+            script = asm_command(child.children[2], variables_dict= vars, parameters=arg_list_to_replace)
             # returned = asm_expression(child.children[3].children[0], arg_list_to_replace)
             arg_list = []
             argument_script = ""
@@ -305,9 +571,12 @@ def asm_func(ast):
                 arg_list.append(val)
     
             #Vars contains the list of variables that were collected by asm_infunc_declare_vars_list
-            for  i in range(len(vars)):
-                var_dec += f"mov qword [rbp - {8*(i+1)}],{vars[i][1]}\n" 
-                script = script.replace(f"[{vars[i][0]}]", f"[rbp - {(i+1)*8}]" )
+            i = 0
+            for key in vars:
+                
+                var_dec += f"mov qword [rbp - {8*(i+1)}],0\n" 
+                script = script.replace(f"[{key}]", f"[rbp - {(i+1)*8}]" )
+                i = i + 1
 
             func_script +=  f"""
             ;This is a function
@@ -318,19 +587,19 @@ def asm_func(ast):
             {var_dec}
             {script}    
             """      
-    # print(funcs_arg_len)
+    
     return (func_script, funcs_arg_len)
   
   
   
   
-def asm_main(ast):
+def asm_main(ast ,variables_dict : dict()):
     for child in ast.children:
 
         if child.data == "main":
             decl_vars_main, init_vars_main = asm_init_vars_main(child.children[0])
-            script = asm_command(child.children[1])
-            returned = asm_expression(child.children[2].children[0])
+            script = asm_command(child.children[1], variables_dict= variables_dict, parameters= decl_vars_main)
+            returned = asm_expression(child.children[2].children[0], variables_dict= variables_dict, parameters= decl_vars_main)
             # Ignore completement le returned
             return f"""
             main:
@@ -347,8 +616,6 @@ def asm_main(ast):
             ret
             """, decl_vars_main
     
-    # print(f"wrong in main ast : {ast}")
-
     
     raise AssertionError("Wrong or not implemented")
     
@@ -356,10 +623,10 @@ def asm_main(ast):
 
 
 def assembly(script):
-    vars = []
+    vars = dict()
     l = lark.Lark(gram, start= "start")
     t = l.parse(script)
-    # print(t.children[0].pretty())
+    
     asm_script = """extern printf; e.g stdio.h
     extern atoi;
     section .data
@@ -372,12 +639,14 @@ def assembly(script):
     fun = fun_ret[0]
     fun_args = fun_ret[1]
 
-    main_prog, init_vars_main = asm_main(t)
+    asm_declare_vars_list(t, vars)
+
+    main_prog, init_vars_main = asm_main(t, vars)
 
     asm_script += init_vars_main
 
-    asm_declare_vars_list(t, vars)
     asm_script +=  asm_declare_vars(vars)
+
 
     asm_script += """   global main
     section .text"""
@@ -397,6 +666,10 @@ def assembly(script):
 def run(code = script):
     assembly(code)
     os.system("./tuto_assembly/build.sh tuto_assembly/test.asm")
+
+
+
+
 
 
 

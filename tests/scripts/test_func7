@@ -1,15 +1,15 @@
 
 main(){
-    int x = 10;
-    str endl = "\n";
-    print(str, endl);
+    int x;
+    x = 10;
+    
     print(int, hallo(0));
-    print(str, endl);
+    
     return 0; 
 }
 
 
-func hallo(y){
+func hallo(int y){
     y = 0;
     return x*x;
 }

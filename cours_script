@@ -1,16 +1,23 @@
-
-
 main(){
     int a;
     a = 4;
-    int* b;
+    int** b;
     b = &a;
     int c;
-    c = *b;
-    print(int, c);
+    
+    int* e;
+    
+    print(int, a);
+    
     return 0;
 }
 
-
+func f(int x, int* p){
+    int a;
+    a = 10;
+    a = a + 1 ;
+    
+    return a;
+}
 
 
