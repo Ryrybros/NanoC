@@ -4,4 +4,8 @@
 test.py
 __pycache__/*
 tuto_assembly/*
+tests/__pycache__/*
 temp_script
+__pycache__
+venv
+.gitignore
