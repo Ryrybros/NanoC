@@ -23,7 +23,7 @@ def asm_declare_vars_list(ast, vars : dict):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
     # if ast.data in ignore_data : return 
     if ast.data == 'declaration' :
-        
+        print(ast.pretty())
 
         vars[ast.children[1].value] =  ast.children[0].value  
         return
@@ -523,9 +523,8 @@ def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_t
 
 
 
-    print(f"wrong ast : {ast}")
     
-    raise AssertionError("Wrong or not implemented")
+    raise AssertionError("Wrong or not implemented", ast)
 
 
 # def ensure_correct_args_func(ast):
@@ -617,7 +616,7 @@ def asm_main(ast ,variables_dict : dict()):
             """, decl_vars_main
     
     
-    raise AssertionError("Wrong or not implemented")
+    raise AssertionError("Wrong or not implemented", ast)
     
 
 
@@ -626,6 +625,7 @@ def assembly(script):
     vars = dict()
     l = lark.Lark(gram, start= "start")
     t = l.parse(script)
+    print("assembly", t.pretty())
     
     asm_script = """extern printf; e.g stdio.h
     extern atoi;

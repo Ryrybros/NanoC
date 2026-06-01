@@ -3,16 +3,16 @@ OPBIN: /==|>=|<=|[+\-*\/<>]/
 TYPE_STR : "str"
 TYPE_INT : "int"
 POINTER_ORDER : "*"+
-ptr : "int" POINTER_ORDER
+PTR : "int" POINTER_ORDER
 TAB_ORDER : ("[" NUMBER "]")+
-tab : "int" TAB_ORDER -> int_tab
-    | ptr TAB_ORDER   -> ptr_tab
+TAB : "int" TAB_ORDER 
+    | PTR TAB_ORDER   
 
-type : "int" -> type_int
-     | "str" -> type_str
-     | ptr   -> type_ptr
-     | "void" -> type_void
-     | tab   -> type_tab
+TYPE : "int" 
+     | "str"
+     | PTR   
+     | "void"
+     | TAB  
 
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
@@ -45,7 +45,7 @@ leftexpression : NAME -> variable | deref -> dereferencing | eltab -> eltab_writ
 
 start: func* main func*
 
-parameter : type NAME -> parameter
+parameter : TYPE NAME -> parameter
 arglist : ( parameter ",")* parameter | -> no_var
 given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
@@ -53,7 +53,8 @@ if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
 for: "for" "(" "int" NAME "=" expression ";" NAME "<" expression ";" NAME"++" ")" "{" command "}"
 command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
-        | leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> assignment
+        | leftexpression "=" expression ";" -> assignment
+        | leftexpression "=" tableau ";" -> assignment
         | leftexpression "=" "&" NAME ";" -> addressing
         | NAME "=" exprstr ";" -> assignement_str
         | command* command -> sequence
@@ -63,7 +64,7 @@ command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | "while" "(" expression ")" "{"command"}"  -> while
         | for -> for
         | "print" "(" format "," expression ")" ";" -> print
-        | type NAME ";" -> declaration
+        | TYPE NAME ";" -> declaration
         | func_call ";" -> function_call
         | "return" expression ";" -> return
 

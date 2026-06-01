@@ -10,36 +10,6 @@ c : dq 0
 e : dq 0
    global main
     section .text
-            ;This is a function
-            f:                    ;Name of func
-
-            push rbp
-            mov rbp, rsp
-            
-                    
-                    sub rsp, 16
-                mov qword [rbp - 8],0
-
-            
-                    mov rax, 10
-                    mov qword [rbp - 8] , rax
-                
-                     
-            mov rax, 1
-            push rax
-            mov rax, [rbp - 8]
-            pop rbx
-            add rax, rbx
-            
-        
-                    mov qword [rbp - 8] , rax
-                
-        mov rax, [rbp - 8]
-        mov rsp, rbp           
-        pop rbp     
-        ret
-            
-            
             main:
             push rbp            
             mov rbp, rsp

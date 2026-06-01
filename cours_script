@@ -4,20 +4,13 @@ main(){
     int** b;
     b = &a;
     int c;
+    a = b;
     
     int* e;
     
     print(int, a);
     
     return 0;
-}
-
-func f(int x, int* p){
-    int a;
-    a = 10;
-    a = a + 1 ;
-    
-    return a;
 }
 
 
