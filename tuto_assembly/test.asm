@@ -52,16 +52,6 @@ e : dq 0
     mov rax, QWORD a
     mov [b], rax
 
-                     
-            mov rax, 1
-            push rax
-            mov rax, [a]
-            pop rbx
-            add rax, rbx
-            
-        
-                    mov qword [a] , rax
-                
                     mov rdi, asm_int_prtr
                     mov rsi, [a]
                     xor rax, rax

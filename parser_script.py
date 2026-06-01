@@ -123,9 +123,8 @@ def getRegister(arg : str , parameters : list):
 
 def asm_compare_types_expression(ast, variables_dict : dict):
     if ast.data == "parenthesis": 
-        return f"""
-        {asm_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)}
-        """
+        return asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
+    
     if ast.data in  ( "variable" , "int" ):
         if ast.data == "variable":
             # print(ast.children[0])
@@ -160,7 +159,7 @@ def asm_compare_types_expression(ast, variables_dict : dict):
         
         return type1
     if ast.data == "dereferencing":
-        return asm_dereferencing_value(ast)
+        return "dereferencing"
 
     # if ast.data == "nullptr":
     #     return asm_dereferencing(ast)

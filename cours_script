@@ -6,7 +6,6 @@ main(){
     int c;
     
     int* e;
-    a = a + b ;
     
     print(int, a);
     
