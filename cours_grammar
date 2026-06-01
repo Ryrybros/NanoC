@@ -1,12 +1,19 @@
 
-OPBIN: /[+\-*\/<>]/
+OPBIN: /==|>=|<=|[+\-*\/<>]/
 OPPTR: /[+\-]/
 TYPE_STR : "str"
 TYPE_INT : "int"
 POINTER_ORDER : "*"+
-PTR : "int" POINTER_ORDER
+ptr : "int" POINTER_ORDER
+TAB_ORDER : ("[" NUMBER "]")+
+tab : "int" TAB_ORDER -> int_tab
+    | ptr TAB_ORDER   -> ptr_tab
 
-TYPE : "int" | "str" | PTR | "void"
+TYPE : "int" -> type_int
+     | "str" -> type_str
+     | ptr   -> type_ptr
+     | "void" -> type_void
+     | tab   -> type_tab
 
 format   : TYPE_STR -> format_str
          | TYPE_INT -> format_int
@@ -14,8 +21,13 @@ format   : TYPE_STR -> format_str
 deref :  POINTER_ORDER NAME -> single_deref | POINTER_ORDER "(" expression ")" -> expr_deref
 
 exprstr : STRING -> str
-           | NAME -> variable
+        | NAME -> variable
 
+tableau: "[" (NAME ",")* NAME "]"
+   | "[" (SIGNED_NUMBER ",")* SIGNED_NUMBER "]"
+   | "[" (tableau ",")* tableau "]"
+eltab: NAME "[" expression "]" -> simple_tab
+     | eltab "[" expression "]" -> tab_tab
 
 
 expression : NAME -> variable
@@ -25,8 +37,9 @@ expression : NAME -> variable
         | "null" -> nullptr
         | func_call -> function_call
         | deref -> dereferencing
+        | eltab -> eltab_read
 
-leftexpression : NAME -> variable | deref -> dereferencing
+leftexpression : NAME -> variable | deref -> dereferencing | eltab -> eltab_write
 
 
 
@@ -38,7 +51,7 @@ given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
-command : leftexpression "=" expression ";" -> assignment
+command : leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> assignment
         | leftexpression "=" "&" NAME ";" -> addressing
         | NAME "=" exprstr ";" -> assignement_str
         | leftexpression "=" "malloc(" expression ")" ";" -> allocation
@@ -58,6 +71,7 @@ func_call : NAME "(" given_arglist ")"
 
 %import common.WS
 %import common.SIGNED_NUMBER
+%import common.NUMBER
 %import common.CNAME -> NAME
 %import common.ESCAPED_STRING -> STRING   
 %ignore WS
