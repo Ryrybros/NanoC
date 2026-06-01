@@ -103,12 +103,11 @@ def asm_declare_vars(vars : list):
 
 
 
-
-
 ##########################################Expressions###########################################
 
 funcs_arg_len = dict() #Has to be global to check if func calls respec nb args of funcs
 func_types = dict()
+func_args = dict()
 
 #The code is parsed
 
@@ -116,18 +115,21 @@ registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
 
 
 def getRegister(arg : str , parameters : list):
+
     assert arg in parameters
     index = parameters.index(arg)
     
     if index < len(registers):    return registers[index]
 
-def asm_compare_types_expression(ast, variables_dict : dict):
+def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
     if ast.data == "parenthesis": 
         return asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
     
     if ast.data in  ( "variable" , "int" ):
         if ast.data == "variable":
-            # print(ast.children[0])
+            
+            if parameters != None and ast.children[0].value in parameters :
+                return parameters[ast.children[0].value]
             assert type(variables_dict) == dict
             assert(len(variables_dict) >= 1)
 
@@ -135,26 +137,11 @@ def asm_compare_types_expression(ast, variables_dict : dict):
         return "int"
 
     if ast.data == "function_call":
-        ensure_correct_args_func(ast)
-        arg_reg = ""
-        arg_script = ""
-        end_func_arg_script = ""
-        kid_idx = 0
-        for kid in ast.children[0].children[1].children:
-            arg_script += asm_expression(kid, variables_dict= variables_dict)
-            arg_script += f"""
-            push {getRegister(kid, ast.children[0].children[1].children)}
-            mov {getRegister(kid, ast.children[0].children[1].children)} , rax
-            """
-            end_func_arg_script += f"""
-            pop {getRegister(kid, ast.children[0].children[1].children)}
-            """
         
-        return ";This is a function call\n" + arg_script + "\n" + arg_reg + "\n" + "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
-
+        return func_types[ ast.children[0].children[0].value ]
     if ast.data == "bin":
-        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict)
-        type2 = asm_compare_types_expression(ast.children[2], variables_dict= variables_dict) 
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
+        type2 = asm_compare_types_expression(ast.children[2], variables_dict= variables_dict, parameters=parameters) 
         if type1 != type2  : raise TypeError(f"Wrong Type binary operation between {type1} and {type2}") 
         
         return type1
@@ -168,7 +155,7 @@ def asm_compare_types_expression(ast, variables_dict : dict):
     raise AssertionError("Wrong or not implemented", ast)
 
 
-def asm_expression(ast, variables_dict :dict , parameters = None, parameters_types = None):
+def asm_expression(ast, variables_dict :dict , parameters : dict):
 
     if ast.data == "parenthesis": 
         return f"""
@@ -176,20 +163,20 @@ def asm_expression(ast, variables_dict :dict , parameters = None, parameters_typ
         """
     if ast.data in  ( "variable" , "int" ):
         if ast.data == "variable":
-            # print(ast.children[0])
-            assert type(variables_dict) == dict
-            assert(len(variables_dict) >= 1)
+            # assert type(variables_dict) == dict
+            # assert(len(variables_dict) >= 1)
             if parameters != None and ast.children[0].value in parameters : 
-                return f"mov rax, {getRegister(ast.children[0].value , variables_dict = variables_dict, parameters=parameters )}"
+                return f"mov rax, {getRegister(ast.children[0].value , parameters=list(parameters.keys()) )}"
             return f"mov rax, [{ast.children[0].value}]"
         else: return f"mov rax, {ast.children[0].value}"
     
     if ast.data == "function_call":
-        ensure_correct_args_func(ast)
+        ensure_correct_args_func(ast,variable_parameters=variables_dict, function_param_parameters= parameters)
         arg_reg = ""
         arg_script = ""
         end_func_arg_script = ""
         kid_idx = 0
+        # print(ast)
         for kid in ast.children[0].children[1].children:
             arg_script += asm_expression(kid, variables_dict= variables_dict, parameters=parameters)
             arg_script += f"""
@@ -261,7 +248,27 @@ def asm_expression(ast, variables_dict :dict , parameters = None, parameters_typ
 
 
 
-def ensure_correct_args_func(ast):
+def ensure_correct_args_func(ast, variable_parameters : dict, function_param_parameters : dict):
+    
+    func_name = ast.children[0].children[0]
+    
+    arg_type = dict() #ast.children[0].children[1].children[0].data
+    i = 0
+    for arg in ast.children[0].children[1].children:
+        positional_arg = list(func_args.keys())[i]
+        if arg.data == "int" and func_args[positional_arg] != "int" : raise TypeError(f"Wrong argument type, expected {func_args[positional_arg]} got int")
+        
+        
+        if arg.data == "variable" :
+        
+            if variable_parameters != None and arg.children[0].value in variable_parameters:
+                if func_args[positional_arg] != variable_parameters[arg.children[0].value] : raise TypeError(f"Wrong argument type, expected {func_args[positional_arg]} got {variable_parameters[arg.children[0].value]}") 
+        
+            if function_param_parameters != None and arg.children[0].value in function_param_parameters:
+                if func_args[positional_arg] != function_param_parameters[arg.children[0].value] : raise TypeError(f"Wrong argument type, expected {func_args[positional_arg]} got {function_param_parameters[arg.children[0].value]}") 
+                # if func_args[list(func_args.keys())[i]]
+        i = i + 1
+    
     if ast.children[0].children[0].value not in funcs_arg_len : 
             raise ValueError(f'Called function {ast.children[0].children[0].value} but it was never defined !')
     nb_args = len(ast.children[0].children[1].children)
@@ -371,11 +378,11 @@ def asm_adressing(ast):
 
 
 
-def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_types = None):
+def asm_command(ast, variables_dict : dict , parameters : dict):
     
     if ast.data == "assignment":
-        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict)
-        type2 = asm_compare_types_expression(ast.children[1], variables_dict= variables_dict) 
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
+        type2 = asm_compare_types_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters) 
         if  type1 != type2 : raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}")  
         
 
@@ -387,17 +394,17 @@ def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_t
                     raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
                     asm_compare_types_expression(ast.children[1])
                 return  f"""{asm_expression(ast.children[1], variables_dict= variables_dict , parameters= parameters)}
-                    mov {getRegister(ast.children[0].children[0].value, variables_dict = variables_dict, parameters=parameters)} , rax
+                    mov {getRegister(ast.children[0].children[0].value, parameters=list(parameters.keys()))} , rax
                 """
             else: 
-                asm_compare_types_expression(ast.children[1], variables_dict= variables_dict)
+                asm_compare_types_expression(ast.children[1], variables_dict= variables_dict, parameters=parameters)
                 return f"""
                     {asm_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters)}
                     mov qword [{ast.children[0].children[0].value}] , rax
                 """
             
             if ast.children[1].data == 'function_call':
-                ensure_correct_args_func(ast.children[1])
+                ensure_correct_args_func(ast.children[1], variable_parameters=variables_dict , function_param_parameters= parameters)
                 return f"""
                 {asm_expression(ast.children[1])}
                 mov qword [{ast.children[0].value}] , rax
@@ -469,7 +476,7 @@ def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_t
             elif ast.children[0].children[0] == "int" :
 
                 if parameters != None and  ast.children[1].children[0] in parameters:
-                    reg = getRegister(ast.children[1].children[0], variables_dict = variables_dict, parameters= parameters)
+                    reg = getRegister(ast.children[1].children[0],  parameters= list(parameters.keys()))
                     # if reg == "rdi": reg = registers[len(parameters) - 1]
                     return f"""
                     
@@ -504,10 +511,11 @@ def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_t
                 """
     
     if ast.data == "function_call":
-        ensure_correct_args_func(ast)
+        
+        ensure_correct_args_func(ast, variable_parameters=variables_dict, function_param_parameters=parameters)
         
         return f"""
-            {asm_expression(ast, parameters= parameters)}
+            {asm_expression(ast, variables_dict=variables_dict ,parameters= parameters)}
         """
 
 
@@ -538,12 +546,25 @@ def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_t
 def asm_func(ast):
     func_script = ""
     
+    #We first get the function signature, before the script 
+
     for child in ast.children:
         if child.data == "function":
-            func_types[child.children[1].value] = child.children[0].value
+            func_types[child.children[1].value] = child.children[0].value     
+
+            arg_list_to_replace = [kid.children[1].value for kid in child.children[2].children ]
+
+            funcs_arg_len[child.children[1].value] = len(arg_list_to_replace)
+
+
+
+
+    for child in ast.children:
+        if child.data == "function":
             child_list = child.children[1:] 
             args = child_list[1]
-        
+            for kid in args.children:    
+                func_args[kid.children[1].value] = kid.children[0].value
             vars = dict()
             asm_declare_vars_list(child_list[2], vars)
             
@@ -556,11 +577,14 @@ def asm_func(ast):
             
             arg_list_to_replace = [kid.children[1].value for kid in child_list[1].children ]
             arg_list_to_replace_types = [kid.children[0].value for kid in child_list[1].children ]
-
+            parameters_to_replace = dict()
+            for i in range(len(arg_list_to_replace )):
+                parameters_to_replace[arg_list_to_replace[i]] = arg_list_to_replace_types[i]
+            
             funcs_arg_len[child_list[0].value] = len(arg_list_to_replace)
 
 
-            script = asm_command(child_list[2], variables_dict= vars, parameters=arg_list_to_replace)
+            script = asm_command(child_list[2], variables_dict= vars, parameters=parameters_to_replace)
             # returned = asm_expression(child_list[3].children[0], arg_list_to_replace)
             arg_list = []
             argument_script = ""
@@ -683,7 +707,7 @@ if __name__ == '__main__':
     # asm_declare_vars(tasm, vars)
     # print(vars)
     assembly(script)
-    print(func_types)
+    
     
     # l = Lark(gram, start= "main")
     # t = l.parse(script)

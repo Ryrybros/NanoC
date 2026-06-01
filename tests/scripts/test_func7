@@ -9,7 +9,7 @@ main(){
 }
 
 
-func hallo(int y){
+int hallo(int y){
     y = 0;
     return x*x;
 }

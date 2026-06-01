@@ -11,12 +11,66 @@ e : dq 0
    global main
     section .text
             ;This is a function
+            g:                    ;Name of func
+
+            push rbp
+            mov rbp, rsp
+            
+                    
+                    sub rsp, 32
+                mov qword [rbp - 8],0
+mov qword [rbp - 16],0
+
+            
+        mov rax, 0
+        mov rsp, rbp           
+        pop rbp     
+        ret
+            
+            
+            ;This is a function
             f:                    ;Name of func
 
             push rbp
             mov rbp, rsp
             
+                    
+                    sub rsp, 32
+                mov qword [rbp - 8],0
+mov qword [rbp - 16],0
+
             
+                     
+            mov rax, rsi
+            push rax
+             
+            ;This is a function call
+mov rax, rdi
+            push rdi
+            mov rdi , rax
+            mov rax, [rbp - 8]
+            push rsi
+            mov rsi , rax
+            
+
+call g;end_func_call
+
+            pop rdi
+            
+            pop rsi
+            
+            push rax
+            mov rax, rsi
+            pop rbx
+            imul  rax, rbx
+            
+        
+            pop rbx
+            add rax, rbx
+            
+        
+                    mov qword [rbp - 8] , rax
+                
         mov rax, 0
         mov rsp, rbp           
         pop rbp     
@@ -35,6 +89,23 @@ e : dq 0
     mov rax, QWORD a
     mov [b], rax
 
+                    ;This is a function call
+mov rax, [e]
+            push rdi
+            mov rdi , rax
+            mov rax, 0
+            push rsi
+            mov rsi , rax
+            
+
+call f;end_func_call
+
+            pop rdi
+            
+            pop rsi
+            
+                    mov qword [a] , rax
+                
                     mov rdi, asm_int_prtr
                     mov rsi, [a]
                     xor rax, rax

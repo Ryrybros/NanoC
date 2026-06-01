@@ -6,14 +6,25 @@ main(){
     int c;
     
     int* e;
-    
+    a = f(e, 0);
     print(int, a);
     
     return 0;
 }
 
-int f(){
+int g(int* a, int b){
+    int x;
+    int k;
     return 0;
 }
 
+
+
+
+int f(int* x, int y){
+    int h ;
+    int* b;
+    h = y*g(x, h) + y;
+    return 0;
+}
 

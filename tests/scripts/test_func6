@@ -10,6 +10,6 @@ main(){
 }
 
 
-func hallo( int x){
+int hallo( int x){
     return x*x;
 }
