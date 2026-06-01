@@ -4,9 +4,10 @@ extern printf; e.g stdio.h
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
     argv : dq 0
-    a: dq 0 
-b: dq 0 
-c: dq 0 
+    a : dq 0
+b : dq 0
+c : dq 0
+e : dq 0
    global main
     section .text
             ;This is a function
@@ -17,23 +18,16 @@ c: dq 0
             
                     
                     sub rsp, 16
-                mov qword [rbp - 8], 0 
+                mov qword [rbp - 8],0
 
             
                     mov rax, 10
                     mov qword [rbp - 8] , rax
                 
                      
-            mov rax, rdi
-            push rax
-             
             mov rax, 1
             push rax
             mov rax, [rbp - 8]
-            pop rbx
-            add rax, rbx
-            
-        
             pop rbx
             add rax, rbx
             
@@ -58,37 +52,10 @@ c: dq 0
     mov rax, QWORD a
     mov [b], rax
 
-                            
-    mov rax, [b]     
-      
-    mov rax, [rax]
-                    mov qword [c] , rax
-                
                      
             mov rax, 1
             push rax
-             
-            ;This is a function call
-mov rax, 100
-            push rdi
-            mov rdi , rax
-            mov rax, [b]
-            push rsi
-            mov rsi , rax
-            
-
-call f;end_func_call
-
-            pop rdi
-            
-            pop rsi
-            
-            push rax
-            mov rax, 2
-            pop rbx
-            imul  rax, rbx
-            
-        
+            mov rax, [a]
             pop rbx
             add rax, rbx
             
