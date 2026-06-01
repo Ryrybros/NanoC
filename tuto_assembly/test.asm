@@ -10,6 +10,19 @@ c : dq 0
 e : dq 0
    global main
     section .text
+            ;This is a function
+            f:                    ;Name of func
+
+            push rbp
+            mov rbp, rsp
+            
+            
+        mov rax, 0
+        mov rsp, rbp           
+        pop rbp     
+        ret
+            
+            
             main:
             push rbp            
             mov rbp, rsp

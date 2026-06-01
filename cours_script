@@ -4,12 +4,15 @@ main(){
     int** b;
     b = &a;
     int c;
-    a = b;
     
     int* e;
     
     print(int, a);
     
+    return 0;
+}
+
+int f(){
     return 0;
 }
 

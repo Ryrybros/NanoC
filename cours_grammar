@@ -69,7 +69,7 @@ command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | "return" expression ";" -> return
 
 main : "main" "(" arglist ")" "{" command* return "}"
-func : "func " NAME "(" arglist ")" "{" command*"}" -> function
+func : TYPE NAME "(" arglist ")" "{" command*"}" -> function
 func_call : NAME "(" given_arglist ")" 
 
 %import common.WS

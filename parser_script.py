@@ -23,7 +23,7 @@ def asm_declare_vars_list(ast, vars : dict):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
     # if ast.data in ignore_data : return 
     if ast.data == 'declaration' :
-        print(ast.pretty())
+        
 
         vars[ast.children[1].value] =  ast.children[0].value  
         return
@@ -108,7 +108,7 @@ def asm_declare_vars(vars : list):
 ##########################################Expressions###########################################
 
 funcs_arg_len = dict() #Has to be global to check if func calls respec nb args of funcs
-
+func_types = dict()
 
 #The code is parsed
 
@@ -537,13 +537,15 @@ def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_t
 
 def asm_func(ast):
     func_script = ""
+    
     for child in ast.children:
         if child.data == "function":
-            
-            args = child.children[1]
+            func_types[child.children[1].value] = child.children[0].value
+            child_list = child.children[1:] 
+            args = child_list[1]
         
             vars = dict()
-            asm_declare_vars_list(child.children[2], vars)
+            asm_declare_vars_list(child_list[2], vars)
             
             if len(vars) != 0:
                 var_dec = f"""
@@ -552,14 +554,14 @@ def asm_func(ast):
                 """
             else: var_dec = ""
             
-            arg_list_to_replace = [kid.children[1].value for kid in child.children[1].children ]
-            arg_list_to_replace_types = [kid.children[0].value for kid in child.children[1].children ]
+            arg_list_to_replace = [kid.children[1].value for kid in child_list[1].children ]
+            arg_list_to_replace_types = [kid.children[0].value for kid in child_list[1].children ]
 
-            funcs_arg_len[child.children[0].value] = len(arg_list_to_replace)
+            funcs_arg_len[child_list[0].value] = len(arg_list_to_replace)
 
 
-            script = asm_command(child.children[2], variables_dict= vars, parameters=arg_list_to_replace)
-            # returned = asm_expression(child.children[3].children[0], arg_list_to_replace)
+            script = asm_command(child_list[2], variables_dict= vars, parameters=arg_list_to_replace)
+            # returned = asm_expression(child_list[3].children[0], arg_list_to_replace)
             arg_list = []
             argument_script = ""
             #init registers to replace vars in func 
@@ -579,7 +581,7 @@ def asm_func(ast):
 
             func_script +=  f"""
             ;This is a function
-            {child.children[0]}:                    ;Name of func
+            {child_list[0]}:                    ;Name of func
 
             push rbp
             mov rbp, rsp
@@ -625,7 +627,7 @@ def assembly(script):
     vars = dict()
     l = lark.Lark(gram, start= "start")
     t = l.parse(script)
-    print("assembly", t.pretty())
+    # print("assembly", t.pretty())
     
     asm_script = """extern printf; e.g stdio.h
     extern atoi;
@@ -681,6 +683,7 @@ if __name__ == '__main__':
     # asm_declare_vars(tasm, vars)
     # print(vars)
     assembly(script)
+    print(func_types)
     
     # l = Lark(gram, start= "main")
     # t = l.parse(script)
