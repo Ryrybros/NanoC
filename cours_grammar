@@ -24,8 +24,8 @@ exprstr : STRING -> str
         | NAME -> variable
 
 tableau: "[" (NAME ",")* NAME "]"
-   | "[" (SIGNED_NUMBER ",")* SIGNED_NUMBER "]"
-   | "[" (tableau ",")* tableau "]"
+       | "[" (SIGNED_NUMBER ",")* SIGNED_NUMBER "]"
+       | "[" (tableau ",")* tableau "]"
 eltab: NAME "[" expression "]" -> simple_tab
      | eltab "[" expression "]" -> tab_tab
 
@@ -38,6 +38,7 @@ expression : NAME -> variable
         | func_call -> function_call
         | deref -> dereferencing
         | eltab -> eltab_read
+        | "len" "(" expression ")" -> len
 
 leftexpression : NAME -> variable | deref -> dereferencing | eltab -> eltab_write
 
@@ -51,6 +52,7 @@ given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
+for: "for" "(" "int" NAME "=" expression ";" NAME "<" expression ";" NAME"++" ")" "{" command "}"
 command : leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> assignment
         | leftexpression "=" "&" NAME ";" -> addressing
         | NAME "=" exprstr ";" -> assignement_str
@@ -60,6 +62,7 @@ command : leftexpression "=" expression ";" | leftexpression "=" tableau ";" -> 
         | if else -> if_else
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
+        | for -> for
         | "print" "(" format "," expression ")" ";" -> print
         | type NAME ";" -> declaration
         | func_call ";" -> function_call
