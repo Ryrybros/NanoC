@@ -1,6 +1,6 @@
 
 
-func fib(int n){
+int fib(int n){
     
     if(n < 2){
         return n ;

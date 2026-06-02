@@ -9,7 +9,6 @@ TAB : "int" TAB_ORDER
     | PTR TAB_ORDER   
 
 TYPE : "int" 
-     | "str"
      | PTR   
      | "void"
      | TAB  
@@ -64,6 +63,7 @@ command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | "while" "(" expression ")" "{"command"}"  -> while
         | for -> for
         | "print" "(" format "," expression ")" ";" -> print
+        | "print" "(" "str" "," STRING ")" ";" -> print
         | TYPE NAME ";" -> declaration
         | func_call ";" -> function_call
         | "return" expression ";" -> return
