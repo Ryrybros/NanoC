@@ -4,7 +4,7 @@ from pretty_printer_script import *
 
 
 
-path = "cours_script"
+path = "cours_script.c"
 grammar_path = "cours_grammar"
 with open(path) as f:
     script = f.read()
@@ -23,7 +23,7 @@ def asm_declare_vars_list(ast, vars : dict):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
     # if ast.data in ignore_data : return 
     if ast.data == 'declaration' :
-        print(ast.pretty())
+        # print(ast.pretty())
 
         vars[ast.children[1].value] =  ast.children[0].value  
         return
@@ -121,7 +121,11 @@ def getRegister(arg : str , parameters : list):
     
     if index < len(registers):    return registers[index]
 
+def isPointer(tipe):
+    return tipe[-1] == "*"
+
 def asm_compare_types_expression(ast, variables_dict : dict):
+    # print("compare", ast)
     if ast.data == "parenthesis": 
         return asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
     
@@ -131,7 +135,11 @@ def asm_compare_types_expression(ast, variables_dict : dict):
             assert type(variables_dict) == dict
             assert(len(variables_dict) >= 1)
 
-            return variables_dict[ast.children[0].value]
+            k = ast.children[0].value
+            if not(k in variables_dict.keys()):
+                raise ValueError(f"Not defined variable {k}")
+            
+            return variables_dict[k]
         return "int"
 
     if ast.data == "function_call":
@@ -155,17 +163,37 @@ def asm_compare_types_expression(ast, variables_dict : dict):
     if ast.data == "bin":
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict)
         type2 = asm_compare_types_expression(ast.children[2], variables_dict= variables_dict) 
-        if type1 != type2  : raise TypeError(f"Wrong Type binary operation between {type1} and {type2}") 
         
-        return type1
-    if ast.data == "dereferencing":
-        return "dereferencing"
+        if type1 == type2 and type1 == "int":
+            return type1
+        elif type1 == "int" and isPointer(type2):
+            return type2
+        elif isPointer(type1) and type2 == "int":
+            return type1
+        else:
+            raise TypeError(f"Wrong Type binary operation between {type1} and {type2}") 
 
-    # if ast.data == "nullptr":
-    #     return asm_dereferencing(ast)
+
+
+    if ast.data == "dereferencing":
+        deref_child = ast.children[0]
+        if (deref_child.data == "single_deref"):
+            type1 = variables_dict[deref_child.children[1].value]
+            
+        
+        if (deref_child.data == "expr_deref"):
+            type1 = asm_compare_types_expression(deref_child.children[1], variables_dict= variables_dict)
+
+        for i in range(len(deref_child.children[0].value)):
+            if len(type1) <= 1 or type1[-1] != "*":
+                raise TypeError(f"Wrong Type Dereferencing get type {type1[:-1]}")
+            type1 = type1[:-1]
+
+        return type1
 
 
     raise AssertionError("Wrong or not implemented", ast)
+
 
 
 def asm_expression(ast, variables_dict :dict , parameters = None, parameters_types = None):
@@ -252,7 +280,7 @@ def asm_expression(ast, variables_dict :dict , parameters = None, parameters_typ
         """
 
     if ast.data == "dereferencing":
-        return asm_dereferencing_value(ast)
+        return asm_dereferencing_value(ast, variables_dict)
 
     # if ast.data == "nullptr":
     #     return asm_dereferencing(ast)
@@ -270,7 +298,7 @@ def ensure_correct_args_func(ast):
         
 
 
-def asm_assign_dereferencing(ast):
+def asm_assign_dereferencing(ast, variables_dict):
     # accede a l'adresse du dereferencement
     n = len(ast.children[0].children[0].value)
     
@@ -284,17 +312,17 @@ def asm_assign_dereferencing(ast):
 {deref}"""
     if (ast.children[0].data == "expr_deref"):
         return f"""       
-    {asm_expression(ast.children[0].children[1])}     
+    {asm_expression(ast.children[0].children[1], variables_dict)}     
 {deref}"""
 
     raise AssertionError("dereferencing not matched")
 
-def asm_dereferencing_value(ast):
+def asm_dereferencing_value(ast, variables_dict):
     # accede au contenue du dereferencement
-    return f""" {asm_assign_dereferencing(ast)}      
+    return f""" {asm_assign_dereferencing(ast, variables_dict)}      
     mov rax, [rax]"""
 
-def asm_declaration_pointeur(ast):
+def asm_declaration_pointeur(ast, variables_dict):
     assert(len(ast.children) == 2)
     return f"{ast.children[1].value} : dq 0\n"
 
@@ -373,10 +401,12 @@ def asm_adressing(ast):
 
 def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_types = None):
     
+    # print("comm", ast)
     if ast.data == "assignment":
+        # print("assignement", ast)
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict)
         type2 = asm_compare_types_expression(ast.children[1], variables_dict= variables_dict) 
-        if  type1 != type2 : raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}")  
+        if  type1 != type2 : raise TypeError(f"Wrong type assignment cannot assign {type2} to {type1}")  
         
 
         if ast.children[0].data == "variable":            
@@ -406,9 +436,17 @@ def asm_command(ast, variables_dict : dict() , parameters : list(), parameters_t
             
 
     if ast.data == "addressing":
+
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict)
+        type2 = variables_dict[ast.children[1]]+"*"
+
+        # print("adressing", ast, type1, type2)
+
+        if type1 != type2: raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}") 
         return asm_adressing(ast) 
-        
-        
+
+    if ast.data == "comment":
+        return ""        
 
     if ast.data == "declaration":
         return ""

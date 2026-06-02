@@ -72,6 +72,11 @@ def test_basique0():
     #This test tests that global vars can be used in functions
     ret = run("tests/scripts/test_basique0")
     assert ret == "6"
+
+def test_pt0():
+    #This test tests that global vars can be used in functions
+    ret = run("tests/scripts/test_pt0.c")
+    assert ret == "0"
         
 
 if __name__ == "__main__":
