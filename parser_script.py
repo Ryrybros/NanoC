@@ -115,11 +115,6 @@ registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
 
 
 def getRegister(arg : str , variables_dict_len: int ,parameters : list, ind : int = None):
-
-def isPointer(tipe):
-    return tipe[-1] == "*"
-
-def asm_compare_types_expression(ast, variables_dict : dict):
     # print("compare", ast)
     assert arg in parameters
     if ind == None : index = parameters.index(arg)
@@ -127,6 +122,10 @@ def asm_compare_types_expression(ast, variables_dict : dict):
 
     if index < len(registers):    return registers[index]
     else : return f"[ rbp + {16 + (index - 6 - 1)*8} ]"
+
+
+def isPointer(tipe):
+    return tipe[-1] == "*"
 
 def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
     if ast.data == "parenthesis": 
@@ -172,7 +171,7 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
             
         
         if (deref_child.data == "expr_deref"):
-            type1 = asm_compare_types_expression(deref_child.children[1], variables_dict= variables_dict)
+            type1 = asm_compare_types_expression(deref_child.children[1], variables_dict, parameters)
 
         for i in range(len(deref_child.children[0].value)):
             if len(type1) <= 1 or type1[-1] != "*":
@@ -284,7 +283,7 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         """
 
     if ast.data == "dereferencing":
-        return asm_dereferencing_value(ast, variables_dict)
+        return asm_dereferencing_value(ast, variables_dict, parameters)
 
     # if ast.data == "nullptr":
     #     return asm_dereferencing(ast)
@@ -327,7 +326,7 @@ def ensure_correct_args_func(ast, variable_parameters : dict, function_param_par
         
 
 
-def asm_assign_dereferencing(ast, variables_dict):
+def asm_assign_dereferencing(ast, variables_dict, parameters):
     # accede a l'adresse du dereferencement
     n = len(ast.children[0].children[0].value)
     
@@ -341,14 +340,14 @@ def asm_assign_dereferencing(ast, variables_dict):
 {deref}"""
     if (ast.children[0].data == "expr_deref"):
         return f"""       
-    {asm_expression(ast.children[0].children[1], variables_dict)}     
+    {asm_expression(ast.children[0].children[1], variables_dict, parameters)}     
 {deref}"""
 
     raise AssertionError("dereferencing not matched")
 
-def asm_dereferencing_value(ast, variables_dict):
+def asm_dereferencing_value(ast, variables_dict, parameters):
     # accede au contenue du dereferencement
-    return f""" {asm_assign_dereferencing(ast, variables_dict)}      
+    return f""" {asm_assign_dereferencing(ast, variables_dict, parameters)}      
     mov rax, [rax]"""
 
 def asm_declaration_pointeur(ast, variables_dict):
@@ -443,7 +442,6 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
                 
                 if ast.children[1].data == 'function_call' and ast.children[1].children[0].children[0].value not in funcs_arg_len : 
                     raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
-                    asm_compare_types_expression(ast.children[1])
                 return  f"""{asm_expression(ast.children[1], variables_dict= variables_dict , parameters= parameters)}
                     mov {getRegister(ast.children[0].children[0].value, variables_dict_len=len(variables_dict) , parameters=list(parameters.keys()))} , rax
                 """
@@ -457,7 +455,7 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
             if ast.children[1].data == 'function_call':
                 ensure_correct_args_func(ast.children[1], variable_parameters=variables_dict , function_param_parameters= parameters)
                 return f"""
-                {asm_expression(ast.children[1])}
+                {asm_expression(ast.children[1], variables_dict, parameters)}
                 mov qword [{ast.children[0].value}] , rax
                 """
 
@@ -465,7 +463,7 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 
     if ast.data == "addressing":
 
-        type1 = asm_compare_types_expression(ast.children[0], variables_dict)
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
         type2 = variables_dict[ast.children[1]]+"*"
 
         # print("adressing", ast, type1, type2)

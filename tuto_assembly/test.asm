@@ -11,31 +11,8 @@ d : dq 0
 e : dq 0
 t : dq 0
 x : dq 0
-    x : dq 0
    global main
     section .text
-            ;This is a function
-            hallo:                    ;Name of func
-
-            push rbp
-            mov rbp, rsp
-            
-            mov rax, 0
-                    mov rdi , rax
-                
-         
-            mov rax, [x]
-            push rax
-            mov rax, [x]
-            pop rbx
-            imul  rax, rbx
-            
-        
-        mov rsp, rbp           
-        pop rbp     
-        ret
-            
-            
             main:
             push rbp            
             mov rbp, rsp
@@ -62,12 +39,79 @@ x : dq 0
 
                             
      
-            mov rax, 1
+            
+         
+            mov rax, [a]
+            push rax
+            mov rax, 9
+            pop rbx
+            imul  rax, rbx
+            
+        
+        
             push rax
              
-            mov rax, 1
+            
+         
+            mov rax, [a]
+            push rax
+            mov rax, 9
+            pop rbx
+            imul  rax, rbx
+            
+        
+        
+            push rax
+                    
+     
+            mov rax, 8
+            push rax
+             
+            
+         
+            mov rax, [a]
+            push rax
+            mov rax, 2
+            pop rbx
+            imul  rax, rbx
+            
+        
+        
+            push rax
+             
+            mov rax, 8
+            push rax
+             
+            
+         
+            mov rax, 2
+            push rax
+            mov rax, [a]
+            pop rbx
+            imul  rax, rbx
+            
+        
+        
             push rax
             mov rax, [e]
+            pop rbx
+            add rax, rbx
+            
+        
+            pop rbx
+            add rax, rbx
+            
+        
+            pop rbx
+            sub rax, rbx
+            
+        
+            pop rbx
+            sub rax, rbx
+            
+             
+      
+    mov rax, [rax]
             pop rbx
             add rax, rbx
             
@@ -78,27 +122,12 @@ x : dq 0
              
     mov rax, [rax]
     mov rax, [rax]
-    mov rax, [rax]
       
     mov rax, [rax]
                     mov qword [x] , rax
                 
                     mov rdi, asm_int_prtr
                     mov rsi, [x]
-                    mov rax, 10
-                    mov qword [x] , rax
-                ;This is a function call
-mov rax, 0
-                push rdi
-                mov rdi , rax
-                
-
-call hallo;end_func_call
-
-                pop rdi
-                
-                    mov rdi, asm_int_prtr
-                    mov rsi, rax
                     xor rax, rax
                     call printf
                 
