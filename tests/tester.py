@@ -77,6 +77,11 @@ def test_basique0():
     #This test tests that global vars can be used in functions
     ret = run("tests/scripts/test_basique0")
     assert ret == "6"
+
+def test_pt0():
+    #This test tests that global vars can be used in functions
+    ret = run("tests/scripts/test_pt0")
+    assert ret == "4"
         
 
 if __name__ == "__main__":
@@ -89,6 +94,7 @@ if __name__ == "__main__":
         test_func5,
         test_func6,
         test_func7,
+        test_pt0
 ]
     t = 1
     for test in all_tests:
