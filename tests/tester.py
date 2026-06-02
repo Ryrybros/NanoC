@@ -35,6 +35,9 @@ def run(args = None):
 
 def test_func1():
     ret = run("tests/scripts/test_func1")
+    if  ret != "300" :
+        print( f"Wrong value  {ret}" )
+        
     assert ret == "300"
     
 
@@ -65,7 +68,9 @@ def test_func6():
 def test_func7():
     #This test tests that global vars can be used in functions
     ret = run("tests/scripts/test_func7")
-    assert ret == "100"
+    if  ret != "100" :
+        print( f"Wrong value  {ret}" )
+        raise ValueError(f"Wrong value  {ret}")
 
 
 def test_basique0():
@@ -96,6 +101,8 @@ if __name__ == "__main__":
             test()
             print(f"Success at test  {test.__name__}")
         except:
-            print(f"error in test  {test.__name__}")
+            print(f"error in test  {test.__name__} ")
+            break
+            
         t += 1
 

@@ -8,7 +8,7 @@ main(){
 }
 
 
-func hello(){
+int hello(){
     int a;
     int b;
     a = 10 + b;
