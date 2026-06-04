@@ -314,6 +314,7 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
     raise AssertionError("Wrong or not implemented", ast)
 
 def asm_lexpression(ast, variable_dict : dict, parameters :  dict):
+    # calcule des expressions qui vont être assignées à gauche
     # The result is put in rax
     if ast.data == "dereferencing":
         # print("left epxr, dere", asm_assign_dereferencing(ast, variable_dict, parameters)+";")
@@ -488,6 +489,7 @@ def asm_adressing(ast):
 
 
 def asm_command_assign(assign_catego, lexpr, rexpr):
+    # a partir d'une left expression calculée avec asm_lexpression et une right expression calculée avec asm_expression, assigne les deux selon le type d'assignement
     # Suppose that the result of lexpr and rexpr are put in rax
     if assign_catego == "variable":
         # print(f"""
