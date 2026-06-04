@@ -24,4 +24,16 @@ Supprimer ttes les branches sauf main
 
 Victor : fct gene de deref arirthm des pts
 
+POUR CLAUDE : 
+
+fct tabToPt : prend l'arbre ast d'un tableau et tente de le convertir en l'arbre ast d'un pt, c'est encore experimentale donc je sais pas du tout si ca marche dans tout les cas, en tout cas ça marche sur l'exemple qu'il y a dans cours_script et c'est un bon début montrant que c'est possible
+
+fct asm_expression : grace a tabToPt, renvoie eltab_read à dereferencing
+
+le malloc ainsi que l'arithmetique des pts marchent, dans "tests", tu trouveras des exemples très proche des tableaux dynamiques
+
+
+
+
+
 

@@ -44,6 +44,20 @@ t : dq 0
             pop rbx
             mov [rbx] , rax
             
+                   
+    mov rax, [t]     
+    mov rax, [rax]
+    mov rax, [rax]
+
+            push rax
+            mov rax, 7
+            pop rbx
+            mov [rbx] , rax
+            
+                    
+     
+            mov rax, 0
+            push rax
                     
      
             mov rax, 0
@@ -53,6 +67,12 @@ t : dq 0
             mov rax, 0
             push rax
             mov rax, [t]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
             pop rbx
             add rax, rbx
             

@@ -196,6 +196,7 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
 
     if ast.data == "eltab_read":
         # tabToPt(ast.children[0])
+        print("asm_compare_type_expr, eltab_read, marche que pour l'exemple dans cours_script")
         return "int"
 
 
@@ -307,7 +308,7 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         tpt = tabToPt(ast.children[0])
         # print("etlab_read in expr\n", tpt.pretty())
         asm_instruct = asm_dereferencing_value(tpt, variables_dict, parameters)
-        print(asm_instruct)
+        # print(asm_instruct)
         return asm_instruct
 
     raise AssertionError("Wrong or not implemented", ast)
