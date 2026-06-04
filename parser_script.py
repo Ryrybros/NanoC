@@ -164,6 +164,19 @@ def asm_compare_types_expression(ast, variables_dict : dict):
     # if ast.data == "nullptr":
     #     return asm_dereferencing(ast)
 
+    if ast.data == "eltab":
+        eltab = ast.children[0]
+        # Vérifie d'abord si l'expression est bien un entier
+        type_expr = asm_compare_types_expression(eltab.children[1], variables_dict=variables_dict)
+        if type_expr != "int" : raise TypeError(f"Wrong Type {type_expr} not an int")
+        
+        # Renvoie le type de l'élément du tableau
+        if eltab.data == "simple_tab":
+            type_tab = variables_dict[ast.children[0].value]    # Type du tableau
+        else:   # eltab.data == "tab_tab"
+            type_tab = asm_compare_types_expression(eltab.children[0], variables_dict=variables_dict)   # Mais eltab n'est pas une expression...
+        return type_tab[:-3]    # Type de l'élément
+
 
     raise AssertionError("Wrong or not implemented", ast)
 
