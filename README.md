@@ -22,4 +22,6 @@ pour for : var muette i a initialiser dans data/scope des fcts, puis transfo for
 
 Supprimer ttes les branches sauf main
 
+Victor : fct gene de deref arirthm des pts
+
 

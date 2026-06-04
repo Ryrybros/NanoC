@@ -1,0 +1,22 @@
+main(){
+    int a;
+    int* b;
+    int** c;
+
+    a = 4;
+    
+    
+    b = malloc(8+(2*a));
+    *b = 4;
+    *(b+8) = 3;
+    
+    c = malloc(8+(2*(*b)));
+    *(c+10-10) = malloc(8);
+    *(c+8) = malloc(8);
+    **c = 7;
+    **(c+8) = 5;
+
+    print(int, **(c+8));
+
+    return 0;
+}

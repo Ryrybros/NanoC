@@ -60,7 +60,7 @@ mov [{v}], rax
 
 def asm_declare_vars(vars : list):
     ret = ""
-    for var in vars: ret += f"{var[0]} : dq 0\n"
+    for var in vars: ret += f"{var} : dq 0\n"
     return ret
 
 
@@ -283,12 +283,27 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         """
 
     if ast.data == "dereferencing":
-        return asm_dereferencing_value(ast, variables_dict, parameters)
+        return asm_dereferencing_value(ast.children[0], variables_dict, parameters)
 
     # if ast.data == "nullptr":
     #     return asm_dereferencing(ast)
 
     raise AssertionError("Wrong or not implemented", ast)
+
+def asm_lexpression(ast, variable_dict : dict, parameters :  dict):
+    # The result is put in rax
+    if ast.data == "dereferencing":
+        # print("left epxr, dere", asm_assign_dereferencing(ast, variable_dict, parameters)+";")
+        # print(asm_assign_dereferencing(ast.children[0], variable_dict, parameters), ast.pretty())
+        return asm_assign_dereferencing(ast.children[0], variable_dict, parameters)
+
+    if ast.data == "variable":
+        return f"mov [{ast.children[0].value}] , rax"
+
+        
+        
+    raise AssertionError("Wrong or not implemented", ast)
+
 
 
 
@@ -324,23 +339,45 @@ def ensure_correct_args_func(ast, variable_parameters : dict, function_param_par
         i = i + 1
     
         
+# derefencer((t+3), 1)
+# q = *(t+3)
+# ...
+# derefencer(q + 4*64)
+
+# derefencer(t+3, 1)
+
+# rax = *(t+E)
+
+# ... 
+
+# derefencer((reg + 4), 1)
+
+# ...
+# rax = *(rax + 4) = *(*(t+3)+4)
+
+# pt_to_derefencer()
+
+# convert tab.ast to pt.ast
+
+
 
 
 def asm_assign_dereferencing(ast, variables_dict, parameters):
     # accede a l'adresse du dereferencement
-    n = len(ast.children[0].children[0].value)
-    
+    # print(ast)
+    n = len(ast.children[0].value)
+
     # Met dans rax le contenu
     deref = ""
     for i in range(n-1):
         deref += "    mov rax, [rax]\n"
-    if (ast.children[0].data == "single_deref"):
+    if (ast.data == "single_deref"):
         return f"""       
-    mov rax, [{ast.children[0].children[1].value}]     
+    mov rax, [{ast.children[1].value}]     
 {deref}"""
-    if (ast.children[0].data == "expr_deref"):
+    if (ast.data == "expr_deref"):
         return f"""       
-    {asm_expression(ast.children[0].children[1], variables_dict, parameters)}     
+    {asm_expression(ast.children[1], variables_dict, parameters)}     
 {deref}"""
 
     raise AssertionError("dereferencing not matched")
@@ -354,18 +391,18 @@ def asm_declaration_pointeur(ast, variables_dict):
     assert(len(ast.children) == 2)
     return f"{ast.children[1].value} : dq 0\n"
 
+
+
+def asm_allocation(ast, variables_dict, parameters):
+    assert(len(ast.children) == 2)
+    return f"""
+    {asm_expression(ast.children[1], variables_dict, parameters)}
+    mov rdi, rax
+    call malloc"""
+
+
 def asm_adressing(ast):
-    return f"""       
-    mov rax, QWORD {ast.children[1].value}
-    mov [{ast.children[0].children[0].value}], rax
-"""
-
-# def asm_dereferencing(ast):
-#     return f"""            
-#     {asm_contenu(ast.children[0])}
-# """
-
-
+    return f"""mov rax, QWORD {ast.value}"""
 
 
 
@@ -425,6 +462,31 @@ def asm_adressing(ast):
 
 
 
+def asm_command_assign(assign_catego, lexpr, rexpr):
+    # Suppose that the result of lexpr and rexpr are put in rax
+    if assign_catego == "variable":
+        # print(f"""
+        #     {rexpr}
+        #     {lexpr}
+        #     """)
+        return f"""
+            {rexpr}
+            {lexpr}
+            """
+
+    if assign_catego == "dereferencing":
+        return f"""
+            {lexpr}
+            push rax
+            {rexpr}
+            pop rbx
+            mov [rbx] , rax
+            """
+
+    
+
+    raise AssertionError("Wrong or not implemented", ast)
+
 
 
 def asm_command(ast, variables_dict : dict , parameters : dict):
@@ -436,28 +498,35 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         if  type1 != type2 : raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}")  
         
 
+        rexpr = asm_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters)
+
         if ast.children[0].data == "variable":            
+
+            # a regrouper pour pouvoir generaliser au leftexpression
 
             if (parameters != None) and ast.children[0].children[0].value in parameters:
                 
                 if ast.children[1].data == 'function_call' and ast.children[1].children[0].children[0].value not in funcs_arg_len : 
                     raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
-                return  f"""{asm_expression(ast.children[1], variables_dict= variables_dict , parameters= parameters)}
+                return  f"""{rexpr}
                     mov {getRegister(ast.children[0].children[0].value, variables_dict_len=len(variables_dict) , parameters=list(parameters.keys()))} , rax
                 """
             else: 
-                asm_compare_types_expression(ast.children[1], variables_dict= variables_dict, parameters=parameters)
-                return f"""
-                    {asm_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters)}
-                    mov qword [{ast.children[0].children[0].value}] , rax
-                """
+                lexpr = asm_lexpression(ast.children[0], variables_dict, parameters)
+                return asm_command_assign(ast.children[0].data, lexpr, rexpr)
             
             if ast.children[1].data == 'function_call':
                 ensure_correct_args_func(ast.children[1], variable_parameters=variables_dict , function_param_parameters= parameters)
                 return f"""
-                {asm_expression(ast.children[1], variables_dict, parameters)}
+                {rexpr}
                 mov qword [{ast.children[0].value}] , rax
                 """
+
+        if ast.children[0].data == "dereferencing":
+            # print("leftderef", ast.children[0])
+            c = ast.children[0]
+            lexpr = asm_lexpression(c, variables_dict, parameters)
+            return asm_command_assign(c.data, lexpr, rexpr)
 
             
 
@@ -469,7 +538,34 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         # print("adressing", ast, type1, type2)
 
         if type1 != type2: raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}") 
-        return asm_adressing(ast) 
+        c = ast.children[0]
+        lexpr = asm_lexpression(c, variables_dict, parameters)
+        # print(asm_command_assign(c.data, lexpr, asm_adressing(ast.children[1])))
+        return asm_command_assign(c.data, lexpr, asm_adressing(ast.children[1]))
+
+
+    if ast.data == "allocation":
+        # In malloc, the number passed to malloc is the number of bytes
+        # print(ast)
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+        type2 = asm_compare_types_expression(ast.children[1], variables_dict, parameters)
+         
+        if type2 != "int":
+            raise TypeError(f"{type2} n'est pas de type entier")
+
+        
+        if not isPointer(type1):
+            raise TypeError(f"{type1} n'est pas de type pointeur")
+
+        rexpr = asm_allocation(ast, variables_dict, parameters)
+        # print(rexpr)
+        c = ast.children[0]
+        lexpr = asm_lexpression(c, variables_dict, parameters)
+        # print(asm_command_assign(c.data, lexpr, rexpr))
+        return asm_command_assign(c.data, lexpr, rexpr)
+
+
+    
 
     if ast.data == "comment":
         return ""        
@@ -610,9 +706,6 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         ret
         """
 
-
-
-    
     raise AssertionError("Wrong or not implemented", ast)
 
 
@@ -738,7 +831,8 @@ def assembly(script):
     # print("assembly", t.pretty())
     
     asm_script = """extern printf; e.g stdio.h
-    extern atoi;
+    extern atoi
+    extern malloc
     section .data
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0

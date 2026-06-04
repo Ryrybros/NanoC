@@ -1,0 +1,17 @@
+main() {
+
+    int a;
+    a = 4;
+
+
+    int* b;
+    b = &a;
+    int** c;
+    c = &b;
+
+    *(*(c+5-5)+(2*a) - (2*a)) = 5;
+
+    print(int, **c);
+
+    return 0;
+}

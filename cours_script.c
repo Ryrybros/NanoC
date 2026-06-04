@@ -1,23 +1,33 @@
 main(){
+    
+
+    // teste tableaux et pt
+
+    // int[3][4][5] t;
+    // a = t[0][0][0];
+    // int*** t;
+    // a = *(*(*(t+0)+0)+0);
+    // t[5+t[9]] = 2;
+    // (t[3]) = 6;
+    // *(t + 3) = 6;
+
     int a;
     a = 4;
-    int*** b;
+
+
+    int* b;
+    b = &a;
     int** c;
-    int* d;
-    int**** e;
-    int**** t;
-    d = &a;
-    c = &d;
-    b = &c;
-    e = &b;
-    t = &b;
-    int x;
-    x = ***(*(e+(a*2) + 8 - (2*a) - 8)+(9*a) - (9*a));
+    c = &b;
+
+    *(*(c+5-5)+(2*a) - (2*a)) = 5;
+
+    print(int, **c);
+
     
     
-    print(int, x);
+
     
     return 0;
 }
-
 
