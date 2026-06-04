@@ -6,9 +6,7 @@ extern printf; e.g stdio.h
     asm_int_prtr : db "%d" , 0
     argv : dq 0
     a : dq 0
-zaza : dq 0
-b : dq 0
-c : dq 0
+t : dq 0
    global main
     section .text
             main:
@@ -17,60 +15,60 @@ c : dq 0
             mov [argv], rsi
             
             
-            mov rax, 4
-            mov [a] , rax
             
-            mov rax, 6
-            mov [zaza] , rax
-            
-            mov rax, QWORD a
-            mov [b] , rax
-            
-            mov rax, QWORD b
-            mov [c] , rax
+    mov rax, 8
+    mov rdi, rax
+    call malloc
+            mov [t] , rax
             
                    
-     
-            mov rax, 3
-            push rax
-             
-            mov rax, 3
-            push rax
-             
-            mov rax, 2
-            push rax
-             
-            mov rax, 2
-            push rax
-            mov rax, [c]
-            pop rbx
-            add rax, rbx
-            
-        
-            pop rbx
-            sub rax, rbx
-            
-        
-            pop rbx
-            add rax, rbx
-            
-        
-            pop rbx
-            sub rax, rbx
-            
-             
+    mov rax, [t]     
 
             push rax
-            mov rax, QWORD zaza
+            
+    mov rax, 8
+    mov rdi, rax
+    call malloc
             pop rbx
             mov [rbx] , rax
-                    
-    mov rax, [c]     
+            
+                   
+    mov rax, [t]     
     mov rax, [rax]
+
+            push rax
+            
+    mov rax, 8
+    mov rdi, rax
+    call malloc
+            pop rbx
+            mov [rbx] , rax
+            
+                    
+     
+            mov rax, 0
+            push rax
+                    
+     
+            mov rax, 0
+            push rax
+            mov rax, [t]
+            pop rbx
+            add rax, rbx
+            
+             
       
     mov rax, [rax]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            mov [a] , rax
+            
                     mov rdi, asm_int_prtr
-                    mov rsi, rax
+                    mov rsi, [a]
                     xor rax, rax
                     call printf
                 

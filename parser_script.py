@@ -127,6 +127,20 @@ def getRegister(arg : str , variables_dict_len: int ,parameters : list, ind : in
 def isPointer(tipe):
     return tipe[-1] == "*"
 
+def tabToPt(ast):
+    if ast.data == "simple_tab":
+        tpt = lark.Tree("expr_deref", [lark.Token("POINTER_ORDER", "*"), lark.Tree('bin', [lark.Tree('variable', [ast.children[0]]), lark.Token('OPBIN', '+'), ast.children[1]])])
+        # print(tpt.pretty())
+        return tpt
+
+    if ast.data == "tab_tab":
+        tpt =  lark.Tree('expr_deref', [lark.Token('POINTER_ORDER', '*'), lark.Tree('bin', [lark.Tree('dereferencing', [tabToPt(ast.children[0])]), lark.Token('OPBIN', '+'), ast.children[1]])])
+        # print(tpt.pretty())
+        return tpt
+
+    # print("pb", ast.pretty())
+    raise AssertionError("Wrong or not implemented", ast.pretty)
+
 def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
     if ast.data == "parenthesis": 
         return asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
@@ -179,6 +193,10 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
             type1 = type1[:-1]
 
         return type1
+
+    if ast.data == "eltab_read":
+        # tabToPt(ast.children[0])
+        return "int"
 
 
     raise AssertionError("Wrong or not implemented", ast)
@@ -285,8 +303,12 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
     if ast.data == "dereferencing":
         return asm_dereferencing_value(ast.children[0], variables_dict, parameters)
 
-    # if ast.data == "nullptr":
-    #     return asm_dereferencing(ast)
+    if ast.data == "eltab_read":
+        tpt = tabToPt(ast.children[0])
+        # print("etlab_read in expr\n", tpt.pretty())
+        asm_instruct = asm_dereferencing_value(tpt, variables_dict, parameters)
+        print(asm_instruct)
+        return asm_instruct
 
     raise AssertionError("Wrong or not implemented", ast)
 
@@ -364,7 +386,7 @@ def ensure_correct_args_func(ast, variable_parameters : dict, function_param_par
 
 def asm_assign_dereferencing(ast, variables_dict, parameters):
     # accede a l'adresse du dereferencement
-    # print(ast)
+    # print("asm_assign", ast)
     n = len(ast.children[0].value)
 
     # Met dans rax le contenu
@@ -384,6 +406,8 @@ def asm_assign_dereferencing(ast, variables_dict, parameters):
 
 def asm_dereferencing_value(ast, variables_dict, parameters):
     # accede au contenue du dereferencement
+    # print("asm_value", ast)
+
     return f""" {asm_assign_dereferencing(ast, variables_dict, parameters)}      
     mov rax, [rax]"""
 
@@ -829,6 +853,7 @@ def assembly(script):
     l = lark.Lark(gram, start= "start")
     t = l.parse(script)
     # print("assembly", t.pretty())
+    # print(t)
     
     asm_script = """extern printf; e.g stdio.h
     extern atoi
