@@ -1,0 +1,26 @@
+
+main(){
+    int x;
+    x = 10;
+    int* a;
+    a = h(100);
+    x = g(a);
+    print(int , x);
+    
+    return 0; 
+}
+
+
+int hallo(int y){
+    y = 0;
+    return x*x;
+}
+
+
+int g(int* y){
+    return 10;
+}
+
+int* h(int y){
+    return 0 ;
+}

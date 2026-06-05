@@ -17,14 +17,13 @@ var_data_rec = ( 'parameter',   'sequence', 'if_else', 'while',  "main", "start"
 
 cpt_if_while = [-1]
 
+main_global_vars = dict()
 
 
 def asm_declare_vars_list(ast, vars : dict):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
     # if ast.data in ignore_data : return 
     if ast.data == 'declaration' :
-        
-
         vars[ast.children[1].value] =  ast.children[0].value  
         return
     if ast.data in var_data_rec:
@@ -355,6 +354,7 @@ def asm_declaration_pointeur(ast, variables_dict):
     return f"{ast.children[1].value} : dq 0\n"
 
 def asm_adressing(ast):
+    #This method does not verify if this is a parameter or a variable, meaning that it will put names that do not exist and not the registers
     return f"""       
     mov rax, QWORD {ast.children[1].value}
     mov [{ast.children[0].children[0].value}], rax
@@ -462,9 +462,10 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
             
 
     if ast.data == "addressing":
-
+        print(variables_dict)
         type1 = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
-        type2 = variables_dict[ast.children[1]]+"*"
+        if variables_dict != None and  ast.children[1].value in variables_dict : type2 = variables_dict[ast.children[1].value]+"*"
+        if parameters != None and ast.children[1].value in parameters : type2 = parameters[ast.children[1].value]+"*"
 
         # print("adressing", ast, type1, type2)
 
@@ -529,15 +530,36 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         if type(ast.children[0]) == lark.lexer.Token:
             
             if ast.children[0].type == "STRING" :
+                string = ast.children[0].value
+                offset = len(string) % 8
+                chunks = [string[1:-1][i:i+8] for i in range(0, len(string), 8)]
+                
+                allocation = ""
+                
+                for chunk in chunks[::-1]:
+                    chunk = chunk[::-1]
+                    
+                    allocation += f"""
+
+                    mov rax, 0x{chunk.encode().hex().zfill(16).upper()}
+                    push rax 
+
+                    """
                 return  f"""
+                    
+                    
+
+                    mov rax, 0x00
                     push rax
-                    mov rax, 0x0A{ast.children[0].value.encode()[::-1].hex().zfill(14).upper()}  
-                    push rax
+
+
+                    {allocation}
+
+
                     mov rdi, rsp
-                    mov rsi, rax
                     xor rax, rax
                     call printf
-                    add rsp, 16
+                    add rsp, {len(chunks)*8 + 8}
                 """
             
 
@@ -750,6 +772,8 @@ def assembly(script):
     fun_args = fun_ret[1]
 
     asm_declare_vars_list(t, vars)
+
+    main_global_vars = vars
 
     main_prog, init_vars_main = asm_main(t, vars)
 

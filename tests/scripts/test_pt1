@@ -1,0 +1,9 @@
+main(){
+    int* a;
+    int b;
+    b = *a;
+    print(int, b);
+    return 0;
+}
+
+

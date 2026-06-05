@@ -72,10 +72,17 @@ def test_func7():
         print( f"Wrong value  {ret}" )
         raise ValueError(f"Wrong value  {ret}")
 
+def test_func8():
+    #This test tests that global vars can be used in functions
+    ret = run("tests/scripts/test_func8")
+    if ret != "10": print("Wrong ret : ", ret)
+
+    assert ret == "10"
+
 
 def test_basique0():
     #This test tests that global vars can be used in functions
-    ret = run("tests/scripts/test_basique0")
+    ret = run("tests/scripts/test_basique.c")
     assert ret == "6"
 
 def test_pt0():
@@ -94,6 +101,7 @@ if __name__ == "__main__":
         test_func5,
         test_func6,
         test_func7,
+        test_func8,
         test_pt0
 ]
     t = 1

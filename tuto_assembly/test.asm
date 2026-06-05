@@ -5,12 +5,6 @@ extern printf; e.g stdio.h
     asm_int_prtr : db "%d" , 0
     argv : dq 0
     a : dq 0
-b : dq 0
-c : dq 0
-d : dq 0
-e : dq 0
-t : dq 0
-x : dq 0
    global main
     section .text
             main:
@@ -19,118 +13,48 @@ x : dq 0
             mov [argv], rsi
             
             
-                    mov rax, 4
-                    mov qword [a] , rax
-                       
-    mov rax, QWORD a
-    mov [d], rax
-       
-    mov rax, QWORD d
-    mov [c], rax
-       
-    mov rax, QWORD c
-    mov [b], rax
-       
-    mov rax, QWORD b
-    mov [e], rax
-       
-    mov rax, QWORD b
-    mov [t], rax
-
-                            
-     
-            
-         
-            mov rax, [a]
-            push rax
-            mov rax, 9
-            pop rbx
-            imul  rax, rbx
-            
-        
-        
-            push rax
-             
-            
-         
-            mov rax, [a]
-            push rax
-            mov rax, 9
-            pop rbx
-            imul  rax, rbx
-            
-        
-        
-            push rax
                     
-     
-            mov rax, 8
-            push rax
-             
-            
-         
-            mov rax, [a]
-            push rax
-            mov rax, 2
-            pop rbx
-            imul  rax, rbx
-            
-        
-        
-            push rax
-             
-            mov rax, 8
-            push rax
-             
-            
-         
-            mov rax, 2
-            push rax
-            mov rax, [a]
-            pop rbx
-            imul  rax, rbx
-            
-        
-        
-            push rax
-            mov rax, [e]
-            pop rbx
-            add rax, rbx
-            
-        
-            pop rbx
-            add rax, rbx
-            
-        
-            pop rbx
-            sub rax, rbx
-            
-        
-            pop rbx
-            sub rax, rbx
-            
-             
-      
-    mov rax, [rax]
-            pop rbx
-            add rax, rbx
-            
-        
-            pop rbx
-            sub rax, rbx
-            
-             
-    mov rax, [rax]
-    mov rax, [rax]
-      
-    mov rax, [rax]
-                    mov qword [x] , rax
-                
-                    mov rdi, asm_int_prtr
-                    mov rsi, [x]
+                    
+
+                    mov rax, 0x00
+                    push rax
+
+                    mov rax, 0x0A
+                    push rax
+                    
+
+                    
+
+                    mov rax, 0x0000003F20756F79
+                    push rax 
+
+                    
+
+                    mov rax, 0x2065726120776F68
+                    push rax 
+
+                    
+
+                    mov rax, 0x202C646E69726620
+                    push rax 
+
+                    
+
+                    mov rax, 0x796D206F6C6C6548
+                    push rax 
+
+                    
+
+
+                    mov rdi, rsp
                     xor rax, rax
                     call printf
-                    add rsp, 16
+                    add rsp, 40
+                
+                    mov rdi, asm_int_prtr
+                    mov rsi, [a]
+                    xor rax, rax
+                    call printf
                 
             
             mov rdi, asm_ret_msg
