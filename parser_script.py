@@ -179,17 +179,18 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
 
         return type1
 
-    if ast.data == "eltab":
+
+    if ast.data == "eltab_read":
         eltab = ast.children[0]
         # Vérifie d'abord si l'expression est bien un entier
-        type_expr = asm_compare_types_expression(eltab.children[1], variables_dict=variables_dict)
+        type_expr = asm_compare_types_expression(eltab.children[1], variables_dict, parameters)
         if type_expr != "int" : raise TypeError(f"Wrong Type {type_expr} not an int")
         
         # Renvoie le type de l'élément du tableau
         if eltab.data == "simple_tab":
-            type_tab = variables_dict[ast.children[0].value]    # Type du tableau
+            type_tab = variables_dict[eltab.children[0].value]    # Type du tableau
         else:   # eltab.data == "tab_tab"
-            type_tab = asm_compare_types_expression(eltab.children[0], variables_dict=variables_dict)   # Mais eltab n'est pas une expression...
+            type_tab = asm_compare_types_expression(eltab.children[0], variables_dict, parameters)   # Mais eltab n'est pas une expression...
         return type_tab[:-3]    # Type de l'élément
 
 
@@ -300,6 +301,13 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
     # if ast.data == "nullptr":
     #     return asm_dereferencing(ast)
 
+
+    if ast.data == "eltab_read":
+        res = asm_read_eltab(ast.children[0], variables_dict, parameters)
+        #print(res)
+        return res
+
+
     raise AssertionError("Wrong or not implemented", ast)
 
 
@@ -377,6 +385,35 @@ def asm_adressing(ast):
 #     return f"""            
 #     {asm_contenu(ast.children[0])}
 # """
+
+
+def asm_write_eltab(ast, variables_dict, parameters):
+    # renvoie l'adresse de l'élément du tableau
+
+    # calcule la valeur de l'expression de l'indice et le place dans rax
+    expr = asm_expression(ast.children[1], variables_dict, parameters)
+
+    # calcule le pointeur du tableau et le met dans rax
+    if ast.data == "simple_tab":
+        if parameters != None and ast.children[0].value in parameters : 
+            tab = f"mov rax, {getRegister(ast.children[0].value ,variables_dict_len= len(variables_dict) ,  parameters=list(parameters.keys()) )}"
+        else:
+            tab = f"mov rax, {ast.children[0].value}"
+    else:   # tableau de tableaux
+        tab = asm_write_eltab(ast.children[0], variables_dict, parameters)
+
+    return f"""
+    {tab}
+    mov rbx, rax
+    {expr}
+    mov rax, rbx + [rax]
+    """
+
+def asm_read_eltab(ast, variables_dict, parameters):
+    # renvoie le contenu de l'élément du tableau
+
+    return f""" {asm_write_eltab(ast, variables_dict, parameters)}      
+    mov rax, [rax]"""
 
 
 
