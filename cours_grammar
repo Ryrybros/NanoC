@@ -9,7 +9,6 @@ TAB : "int" TAB_ORDER
     | PTR TAB_ORDER   
 
 TYPE : "int" 
-     | "str"
      | PTR   
      | "void"
      | TAB  
@@ -33,7 +32,6 @@ expression : NAME -> variable
         | expression OPBIN expression -> bin
         | "(" expression ")" -> parenthesis
         | SIGNED_NUMBER -> int 
-        | "null" -> nullptr
         | func_call -> function_call
         | deref -> dereferencing
         | eltab -> eltab_read
@@ -64,9 +62,11 @@ command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | "while" "(" expression ")" "{"command"}"  -> while
         | for -> for
         | "print" "(" format "," expression ")" ";" -> print
+        | "print" "(" "str" "," STRING ")" ";" -> print
         | TYPE NAME ";" -> declaration
         | func_call ";" -> function_call
         | "return" expression ";" -> return
+        | "//" /.+/ -> comment
 
 main : "main" "(" arglist ")" "{" command* return "}"
 func : TYPE NAME "(" arglist ")" "{" command*"}" -> function

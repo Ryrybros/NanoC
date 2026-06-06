@@ -35,6 +35,9 @@ def run(args = None):
 
 def test_func1():
     ret = run("tests/scripts/test_func1")
+    if  ret != "300" :
+        print( f"Wrong value  {ret}" )
+        
     assert ret == "300"
     
 
@@ -65,13 +68,27 @@ def test_func6():
 def test_func7():
     #This test tests that global vars can be used in functions
     ret = run("tests/scripts/test_func7")
-    assert ret == "100"
+    if  ret != "100" :
+        print( f"Wrong value  {ret}" )
+        raise ValueError(f"Wrong value  {ret}")
+
+def test_func8():
+    #This test tests that global vars can be used in functions
+    ret = run("tests/scripts/test_func8")
+    if ret != "10": print("Wrong ret : ", ret)
+
+    assert ret == "10"
 
 
 def test_basique0():
     #This test tests that global vars can be used in functions
-    ret = run("tests/scripts/test_basique0")
+    ret = run("tests/scripts/test_basique.c")
     assert ret == "6"
+
+def test_pt0():
+    #This test tests that global vars can be used in functions
+    ret = run("tests/scripts/test_pt0")
+    assert ret == "4"
         
 
 if __name__ == "__main__":
@@ -84,6 +101,8 @@ if __name__ == "__main__":
         test_func5,
         test_func6,
         test_func7,
+        test_func8,
+        test_pt0
 ]
     t = 1
     for test in all_tests:
@@ -91,6 +110,8 @@ if __name__ == "__main__":
             test()
             print(f"Success at test  {test.__name__}")
         except:
-            print(f"error in test  {test.__name__}")
+            print(f"error in test  {test.__name__} ")
+            break
+            
         t += 1
 
