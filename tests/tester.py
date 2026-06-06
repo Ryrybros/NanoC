@@ -89,6 +89,18 @@ def test_pt0():
     #This test tests that global vars can be used in functions
     ret = run("tests/scripts/test_pt0")
     assert ret == "4"
+
+def test_leftexpr_pt0():
+    ret = run("tests/scripts/test_leftexpr_pt0")
+    assert ret == "5"
+
+def test_leftexpr_pt1():
+    ret = run("tests/scripts/test_leftexpr_pt1")
+    assert ret == "6"
+
+def test_malloc0():
+    ret = run("tests/scripts/test_malloc0")
+    assert ret == "5"
         
 
 if __name__ == "__main__":
@@ -101,8 +113,10 @@ if __name__ == "__main__":
         test_func5,
         test_func6,
         test_func7,
-        test_func8,
-        test_pt0
+        test_pt0,
+        test_leftexpr_pt0,
+        test_malloc0,
+        test_leftexpr_pt1
 ]
     t = 1
     for test in all_tests:
