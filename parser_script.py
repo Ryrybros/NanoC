@@ -17,8 +17,6 @@ var_data_rec = ( 'parameter',   'sequence', 'if_else', 'while',  "main", "start"
 
 cpt_if_while = [-1]
 
-
-
 def asm_declare_vars_list(ast, vars : dict):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
     # if ast.data in ignore_data : return 
@@ -142,6 +140,10 @@ def tabToPt(ast):
     raise AssertionError("Wrong or not implemented", ast.pretty)
 
 def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
+
+    if type(ast) == lark.lexer.Token: 
+        if ast.value in variables_dict : return variables_dict[ast.value]
+        else: return parameters[ast.value]
     if ast.data == "parenthesis": 
         return asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
     
@@ -181,7 +183,7 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
     if ast.data == "dereferencing":
         deref_child = ast.children[0]
         if (deref_child.data == "single_deref"):
-            type1 = variables_dict[deref_child.children[1].value]
+            type1 = asm_compare_types_expression(deref_child.children[1], variables_dict, parameters)
             
         
         if (deref_child.data == "expr_deref"):
@@ -518,9 +520,12 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
     
     # print("comm", ast)
     if ast.data == "assignment":
+        
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
         type2 = asm_compare_types_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters) 
-        if  type1 != type2 : raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}")  
+        if  type1 != type2 :
+
+            raise TypeError(f"Wrong type assignment cannot assign {type2} to {type1}")  
         
 
         rexpr = asm_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters)
@@ -551,12 +556,11 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
     if ast.data == "addressing":
 
         type1 = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
-        print(ast)
-        type2 = variables_dict[ast.children[1]]+"*"
 
-        # print("adressing", ast, type1, type2)
+        type2 = asm_compare_types_expression(ast.children[1],variables_dict,parameters)+"*"
+        
 
-        if type1 != type2: raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}") 
+        if type1 != type2: raise TypeError(f"Wrong type at line {ast.line} assignment cannot assign  {type2} to {type1}") 
         c = ast.children[0]
         lexpr = asm_lexpression(c, variables_dict, parameters)
         # print(asm_command_assign(c.data, lexpr, asm_adressing(ast.children[1])))
@@ -755,6 +759,7 @@ def asm_func(ast):
     for child in ast.children:
         if child.data == "function":
             func_name = child.children[1].value
+
             func_args[func_name] = dict()
             child_list = child.children[1:] 
             args = child_list[1]
@@ -793,15 +798,17 @@ def asm_func(ast):
             #Vars contains the list of variables that were collected by asm_infunc_declare_vars_list
             i = 0
             for key in vars:
-                
+                #BACKHERE
                 var_dec += f"mov qword [rbp - {8*(i+1)}],0\n" 
                 script = script.replace(f"[{key}]", f"[rbp - {(i+1)*8}]" )
+                script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1)*8}]" )
                 i = i + 1
 
-            
+            i = 0
             for key in arg_list_to_replace:
                 print( f"replacing {key} with {getRegister(key, 0 ,arg_list_to_replace)}")
                 script = script.replace(f"[{key}]", getRegister(key, 0 ,arg_list_to_replace))
+                script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1)*8}]" )
                 i = i + 1
 
 

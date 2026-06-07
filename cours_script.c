@@ -6,7 +6,9 @@ main(){
     p = &a;
     
     print(int, f(p));
-    p = g(10);
+    a = 10;
+    p = g(a, p);
+    print(str, "and");
     print(int, f(p));
 
     
@@ -17,9 +19,8 @@ int f(int* p){
     return *p;
 }
 
-int g(int a){
-    int* p;
-    p = &a;
-    return p;
+int* g(int a, int* pt){
+    *pt = a;
+    return pt;
 }
 
