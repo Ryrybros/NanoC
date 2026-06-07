@@ -1,30 +1,25 @@
 main(){
     
-
-    // teste tableaux et pt
+    int*p;
     int a;
-    // int[3][4][5] t;
-    int*** t;
-    t = malloc(8);
-    *t = malloc(8);
-
-    **t = malloc(8);
-
-    ***t = 7;
-
-    a = t[0][0][0];
-    print(int, a);
-    // int*** t;
-    // a = *(*(*(t+0)+0)+0);
-    // t[5+t[9]] = 2;
-    // (t[3]) = 6;
-    // *(t + 3) = 6;
-
-
+    a = 4;
+    p = &a;
     
-    
+    print(int, f(p));
+    p = g(10);
+    print(int, f(p));
 
     
     return 0;
+}
+
+int f(int* p){
+    return *p;
+}
+
+int g(int a){
+    int* p;
+    p = &a;
+    return p;
 }
 

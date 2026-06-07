@@ -213,8 +213,6 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         if ast.data == "variable":
             # assert type(variables_dict) == dict
             # assert(len(variables_dict) >= 1)
-            if parameters != None and ast.children[0].value in parameters : 
-                return f"mov rax, {getRegister(ast.children[0].value ,variables_dict_len= len(variables_dict) ,  parameters=list(parameters.keys()) )}"
             return f"mov rax, [{ast.children[0].value}]"
         else: return f"mov rax, {ast.children[0].value}"
     
@@ -531,17 +529,10 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 
             # a regrouper pour pouvoir generaliser au leftexpression
 
-            if (parameters != None) and ast.children[0].children[0].value in parameters:
-                
-                if ast.children[1].data == 'function_call' and ast.children[1].children[0].children[0].value not in funcs_arg_len : 
-                    raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
-                return  f"""{rexpr}
-                    mov {getRegister(ast.children[0].children[0].value, variables_dict_len=len(variables_dict) , parameters=list(parameters.keys()))} , rax
-                """
-            else: 
-                lexpr = asm_lexpression(ast.children[0], variables_dict, parameters)
-                return asm_command_assign(ast.children[0].data, lexpr, rexpr)
-            
+        
+            lexpr = asm_lexpression(ast.children[0], variables_dict, parameters)
+            return asm_command_assign(ast.children[0].data, lexpr, rexpr)
+        
             if ast.children[1].data == 'function_call':
                 ensure_correct_args_func(ast.children[1], variable_parameters=variables_dict , function_param_parameters= parameters)
                 return f"""
@@ -560,6 +551,7 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
     if ast.data == "addressing":
 
         type1 = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+        print(ast)
         type2 = variables_dict[ast.children[1]]+"*"
 
         # print("adressing", ast, type1, type2)
@@ -805,6 +797,14 @@ def asm_func(ast):
                 var_dec += f"mov qword [rbp - {8*(i+1)}],0\n" 
                 script = script.replace(f"[{key}]", f"[rbp - {(i+1)*8}]" )
                 i = i + 1
+
+            
+            for key in arg_list_to_replace:
+                print( f"replacing {key} with {getRegister(key, 0 ,arg_list_to_replace)}")
+                script = script.replace(f"[{key}]", getRegister(key, 0 ,arg_list_to_replace))
+                i = i + 1
+
+
 
             func_script +=  f"""
             ;This is a function
