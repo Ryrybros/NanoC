@@ -645,20 +645,42 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
     if ast.data == "print":
         #Debug prints
         
+        
+
         if type(ast.children[0]) == lark.lexer.Token:
             
             if ast.children[0].type == "STRING" :
+                string = ast.children[0].value
+                offset = len(string) % 8
+                chunks = [string[1:-1][i:i+8] for i in range(0, len(string), 8)]
+                
+                allocation = ""
+                
+                for chunk in chunks[::-1]:
+                    chunk = chunk[::-1]
+                    
+                    allocation += f"""
+
+                    mov rax, 0x{chunk.encode().hex().zfill(16).upper()}
+                    push rax 
+
+                    """
                 return  f"""
+                    
+                    
+
+                    mov rax, 0x00
                     push rax
-                    mov rax, 0x0A{ast.children[0].value.encode()[::-1].hex().zfill(14).upper()}  
-                    push rax
+
+
+                    {allocation}
+
+
                     mov rdi, rsp
-                    mov rsi, rax
                     xor rax, rax
                     call printf
-                    add rsp, 16
+                    add rsp, {len(chunks)*8 + 8}
                 """
-            
 
             
         
