@@ -676,9 +676,15 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
                     {allocation}
 
 
+                    push rdi
+                    push rsi
+                    push rax
                     mov rdi, rsp
                     xor rax, rax
                     call printf
+                    pop rax
+                    pop rsi
+                    pop rdi
                     add rsp, {len(chunks)*8 + 8}
                 """
 
@@ -695,27 +701,17 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
                 """
             elif ast.children[0].children[0] == "int" :
 
-                if parameters != None and  ast.children[1].children[0] in parameters:
-                    reg = getRegister(ast.children[1].children[0], variables_dict_len=len(variables_dict), parameters= list(parameters.keys()))
-                    # if reg == "rdi": reg = registers[len(parameters) - 1]
-                    return f"""
-                    
+                return f"""
                     push rdi
                     push rsi
                     push rax
-                    xor rax, rax
-                    mov rdi, asm_int_prtr
-                    mov rsi, {reg}
-                    call printf
-                    pop rax
-                    pop rsi
-                    pop rdi
-                    """
-                return f"""
                     mov rdi, asm_int_prtr
                     mov rsi, [{ast.children[1].children[0]}]
                     xor rax, rax
                     call printf
+                    pop rax
+                    pop rsi
+                    pop rdi
                 """
                 #HERE
         else : 
@@ -724,10 +720,16 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
             
             if ast.children[0].children[0] == "int" :
                 return stret + f"""
+                    push rdi
+                    push rsi
+                    push rax
                     mov rdi, asm_int_prtr
                     mov rsi, rax
                     xor rax, rax
                     call printf
+                    pop rax
+                    pop rsi
+                    pop rdi
                 """
             
             #Debug

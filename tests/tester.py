@@ -94,6 +94,12 @@ def test_pt_func0():
     ret = run("tests/scripts/test_pt_func0")
     assert ret == "4"
 
+def test_pt_func1():
+    #This test tests that global vars can be used in functions
+    ret = run("tests/scripts/test_pt_func1")
+    assert ret == "0,10,20,30,40,"
+
+
 def test_leftexpr_pt0():
     ret = run("tests/scripts/test_leftexpr_pt0")
     assert ret == "5"
@@ -102,11 +108,25 @@ def test_leftexpr_pt1():
     ret = run("tests/scripts/test_leftexpr_pt1")
     assert ret == "6"
 
+
+def test_leftexpr_func0():
+    ret = run("tests/scripts/test_leftexpr_func0")
+    assert ret == "5"
+
+
+def test_leftexpr_func1():
+    ret = run("tests/scripts/test_leftexpr_func1")
+    assert ret == "6"
+
 def test_malloc0():
     ret = run("tests/scripts/test_malloc0")
     assert ret == "5"
         
 
+def test_malloc_func():
+    ret = run("tests/scripts/test_malloc_func")
+    assert ret == "5"
+        
 if __name__ == "__main__":
     all_tests = [
         test_basique0,
@@ -120,9 +140,15 @@ if __name__ == "__main__":
         test_func8,
         test_pt0,
         test_pt_func0,
+        test_pt_func1,
         test_leftexpr_pt0,
+        test_leftexpr_func0,
         test_malloc0,
-        test_leftexpr_pt1
+        test_malloc_func,
+        test_leftexpr_pt1,
+        test_leftexpr_func1
+
+
 ]
     t = 1
     for test in all_tests:

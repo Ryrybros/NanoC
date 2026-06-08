@@ -1,0 +1,21 @@
+main(){
+    int a;
+    a = m();
+    return 0;
+}
+
+int m() {
+int a;
+    a = 4;
+    int zaza;
+    zaza = 6;
+
+
+    int* b;
+    b = &a;
+    int** c;
+    c = &b;
+    *(c+2-2+3-3) = &zaza;
+    print(int, **c);
+    return 0;
+}
