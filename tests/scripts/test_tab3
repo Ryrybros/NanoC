@@ -1,0 +1,13 @@
+main() {
+    int* t;
+    t = malloc(8);
+    t[1] = 50;
+    int*[5] p;
+    p[1] = t;
+    p[1][2] = 15;
+
+    int a;
+    a = p[1][2] + p[1][1];
+    print(int, a);
+    return a;
+}

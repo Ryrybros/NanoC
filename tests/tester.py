@@ -101,7 +101,22 @@ def test_leftexpr_pt1():
 def test_malloc0():
     ret = run("tests/scripts/test_malloc0")
     assert ret == "5"
-        
+
+def test_tab0():
+    ret = run("tests/scripts/test_tab0")
+    assert ret == "18"
+
+def test_tab1():
+    ret = run("tests/scripts/test_tab1")
+    assert ret == "50"
+
+def test_tab2():
+    ret = run("tests/scripts/test_tab2")
+    assert ret == "3"
+
+def test_tab3():
+    ret = run("tests/scripts/test_tab3")
+    assert ret == "65"
 
 if __name__ == "__main__":
     all_tests = [
@@ -116,7 +131,11 @@ if __name__ == "__main__":
         test_pt0,
         test_leftexpr_pt0,
         test_malloc0,
-        test_leftexpr_pt1
+        test_leftexpr_pt1,
+        test_tab0,
+        test_tab1,
+        test_tab2,
+        test_tab3
 ]
     t = 1
     for test in all_tests:

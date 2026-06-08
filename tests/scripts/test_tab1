@@ -1,0 +1,11 @@
+main() {
+    int a;
+    int* t;
+    t = malloc(8);
+    t[1] = 50;
+    a = t[1];
+
+    print(int, a);
+
+    return a;
+}

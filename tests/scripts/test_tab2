@@ -1,0 +1,8 @@
+main() {
+    int[1][5] c;
+    int[5] b;
+    b[2] = 3;
+    c[0] = b;
+    print(int, c[0][2]);
+    return c[0][2];
+}

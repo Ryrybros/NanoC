@@ -62,8 +62,8 @@ def asm_declare_vars(vars : list):
     for var in vars:
         if "[" in vars[var]:
             len = vars[var][-2]
-            print(len)
-            ret += f"{var} times {len} dq 0\n"
+            ret += f"""asm_static_tab_{var} times {len} dq 0
+            {var} : dq 0\n"""
         else:
             ret += f"{var} : dq 0\n"
     return ret
@@ -73,7 +73,7 @@ def asm_ptr_tab(vars : list):
     ret = ""
     for var in vars:
         if "[" in vars[var]:
-            ret += f"""mov rax, {var}
+            ret += f"""mov rax, asm_static_tab_{var}
             mov [{var}], rax\n"""
     return ret
 
@@ -141,13 +141,13 @@ def isPointer(tipe):
 
 def tabToPt(ast):
     if ast.data == "simple_tab":
-        tpt = lark.Tree("expr_deref", [lark.Token("POINTER_ORDER", "*"), lark.Tree('bin', [lark.Tree('variable', [ast.children[0]]), lark.Token('OPBIN', '+'), ast.children[1]])])
-        print(tpt.pretty())
+        tpt = lark.Tree("expr_deref", [lark.Token("POINTER_ORDER", "*"), lark.Tree('bin', [lark.Tree('variable', [ast.children[0]]), lark.Token('OPBIN', '+'), lark.Tree('bin', [lark.Tree('int', [lark.Token('SIGNED_NUMBER', 8)]), lark.Token('OPBIN', '*'), ast.children[1]])])])
+        #print(tpt.pretty())
         return tpt
 
     if ast.data == "tab_tab":
-        tpt =  lark.Tree('expr_deref', [lark.Token('POINTER_ORDER', '*'), lark.Tree('bin', [lark.Tree('dereferencing', [tabToPt(ast.children[0])]), lark.Token('OPBIN', '+'), ast.children[1]])])
-        print(tpt.pretty())
+        tpt =  lark.Tree('expr_deref', [lark.Token('POINTER_ORDER', '*'), lark.Tree('bin', [lark.Tree('dereferencing', [tabToPt(ast.children[0])]), lark.Token('OPBIN', '+'), lark.Tree('bin', [lark.Tree('int', [lark.Token('SIGNED_NUMBER', 8)]), lark.Token('OPBIN', '*'), ast.children[1]])])])
+        #print(tpt.pretty())
         return tpt
 
     # print("pb", ast.pretty())
@@ -206,32 +206,44 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
 
         return type1
 
-    if ast.data == "eltab_read":
-        # tabToPt(ast.children[0])
-        print("asm_compare_type_expr, eltab_read, marche que pour l'exemple dans cours_script")
-        return "int"
+    # if ast.data == "eltab_read":
+    #     # tabToPt(ast.children[0])
+    #     print("asm_compare_type_expr, eltab_read, marche que pour l'exemple dans cours_script")
+    #     return "int"
     
-    if ast.data == "eltab_write":
-        # tabToPt(ast.children[0])
-        print("asm_compare_type_expr, eltab_write, marche que pour l'exemple dans cours_script")
-        return "int"
+    # if ast.data == "eltab_write":
+    #     # tabToPt(ast.children[0])
+    #     print("asm_compare_type_expr, eltab_write, marche que pour l'exemple dans cours_script")
+    #     return "int"
 
 
-    if ast.data == "eltab_read":
-        eltab = ast.children[0]
-        # Vérifie d'abord si l'expression est bien un entier
-        type_expr = asm_compare_types_expression(eltab.children[1], variables_dict, parameters)
+    if ast.data == "eltab_read" or ast.data == "eltab_write":
+        return asm_types_eltab(ast.children[0], variables_dict, parameters)
+        
+
+    raise AssertionError("Wrong or not implemented", ast)
+
+
+def asm_types_eltab(ast, variables_dict : dict, parameters : dict):
+    # Vérifie d'abord si l'expression est bien un entier
+        type_expr = asm_compare_types_expression(ast.children[1], variables_dict, parameters)
         if type_expr != "int" : raise TypeError(f"Wrong Type {type_expr} not an int")
         
         # Renvoie le type de l'élément du tableau
-        if eltab.data == "simple_tab":
-            type_tab = variables_dict[eltab.children[0].value]    # Type du tableau
-        else:   # eltab.data == "tab_tab"
-            type_tab = asm_compare_types_expression(eltab.children[0], variables_dict, parameters)   # Mais eltab n'est pas une expression...
-        return type_tab[:-3]    # Type de l'élément
-
-
-    raise AssertionError("Wrong or not implemented", ast)
+        if ast.data == "simple_tab":
+            type_tab = variables_dict[ast.children[0].value]    # Type du tableau
+            if "[" in type_tab:         # Tableau statique
+                i = type_tab.find("[")
+                return type_tab[:i] + type_tab[i+3:]
+            else:                       # Pointeur
+                return type_tab[:-1]
+        if ast.data == "tab_tab":   # eltab.data == "tab_tab"
+            type_tab = asm_types_eltab(ast.children[0], variables_dict, parameters)
+            if "[" in type_tab:         # Tableau statique
+                return type_tab[:-3]
+            else:                       # Pointeur
+                return type_tab[:-1]
+        raise AssertionError("Wrong or not implemented", ast)
 
 
 def asm_expression(ast, variables_dict :dict , parameters : dict):

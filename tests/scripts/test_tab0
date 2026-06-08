@@ -1,4 +1,4 @@
-main(){
+main() {
     int[3] t;
     t[0] = 3;
     int a;
@@ -11,4 +11,3 @@ main(){
     //print(int, t[2]);
     return b;
 }
-
