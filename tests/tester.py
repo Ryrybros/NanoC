@@ -75,10 +75,9 @@ def test_func7():
 def test_func8():
     #This test tests that global vars can be used in functions
     ret = run("tests/scripts/test_func8")
-    if ret != "10": print("Wrong ret : ", ret)
-
-    assert ret == "10"
-
+    if  ret != "4and10" :
+        print( f"Wrong value  {ret}" )
+        raise ValueError(f"Wrong value  {ret}")
 
 def test_basique0():
     #This test tests that global vars can be used in functions
@@ -88,6 +87,11 @@ def test_basique0():
 def test_pt0():
     #This test tests that global vars can be used in functions
     ret = run("tests/scripts/test_pt0")
+    assert ret == "4"
+
+def test_pt_func0():
+    #This test tests that global vars can be used in functions
+    ret = run("tests/scripts/test_pt_func0")
     assert ret == "4"
 
 def test_leftexpr_pt0():
@@ -128,7 +132,9 @@ if __name__ == "__main__":
         test_func5,
         test_func6,
         test_func7,
+        test_func8,
         test_pt0,
+        test_pt_func0,
         test_leftexpr_pt0,
         test_malloc0,
         test_leftexpr_pt1,

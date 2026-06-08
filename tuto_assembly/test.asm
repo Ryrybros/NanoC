@@ -5,10 +5,10 @@ extern printf; e.g stdio.h
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
     argv : dq 0
-    a : dq 0
-t : dq 0
-b times 2 dq 0
-c times 1 dq 0
+    t : dq 0
+asm_static_tab_p times 5 dq 0
+            p : dq 0
+a : dq 0
    global main
     section .text
             main:
@@ -16,10 +16,8 @@ c times 1 dq 0
             mov rbp, rsp
             mov [argv], rsi
 
-            mov rax, b
-            mov [b], rax
-mov rax, c
-            mov [c], rax
+            mov rax, asm_static_tab_p
+            mov [p], rax
 
 
             
@@ -32,7 +30,14 @@ mov rax, c
             
                    
      
+             
             mov rax, 1
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
             push rax
             mov rax, [t]
             pop rbx
@@ -41,48 +46,147 @@ mov rax, c
              
 
             push rax
-            mov rax, 506978305677
+            mov rax, 50
             pop rbx
             mov [rbx] , rax
             
-                    
+                   
      
+             
             mov rax, 1
             push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+            mov rax, [p]
+            pop rbx
+            add rax, rbx
+            
+             
+
+            push rax
             mov rax, [t]
+            pop rbx
+            mov [rbx] , rax
+            
+                   
+     
+             
+            mov rax, 2
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+                    
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+            mov rax, [p]
             pop rbx
             add rax, rbx
             
              
       
     mov rax, [rax]
-            mov [a] , rax
-            
-                   
-     
-            mov rax, 1
-            push rax
-            mov rax, [b]
             pop rbx
             add rax, rbx
             
              
 
             push rax
-            mov rax, 25
+            mov rax, 15
             pop rbx
             mov [rbx] , rax
             
+             
                     
      
+             
             mov rax, 1
             push rax
-            mov rax, [b]
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+                    
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+            mov rax, [p]
             pop rbx
             add rax, rbx
             
              
       
+    mov rax, [rax]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            push rax
+                    
+     
+             
+            mov rax, 2
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+                    
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+            mov rax, [p]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            pop rbx
+            add rax, rbx
+            
+        
             mov [a] , rax
             
                     mov rdi, asm_int_prtr

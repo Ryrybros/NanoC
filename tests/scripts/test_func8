@@ -1,26 +1,26 @@
-
 main(){
-    int x;
-    x = 10;
-    int* a;
-    a = h(100);
-    x = g(a);
-    print(int , x);
     
-    return 0; 
+    int*p;
+    int a;
+    a = 4;
+    p = &a;
+    
+    print(int, f(p));
+    a = 10;
+    p = g(a, p);
+    print(str, "and");
+    print(int, f(p));
+
+    
+    return 0;
 }
 
-
-int hallo(int y){
-    y = 0;
-    return x*x;
+int f(int* p){
+    return *p;
 }
 
-
-int g(int* y){
-    return 10;
+int* g(int a, int* pt){
+    *pt = a;
+    return pt;
 }
 
-int* h(int y){
-    return 0 ;
-}

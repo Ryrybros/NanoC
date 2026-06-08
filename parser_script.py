@@ -154,6 +154,10 @@ def tabToPt(ast):
     raise AssertionError("Wrong or not implemented", ast.pretty)
 
 def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
+
+    if type(ast) == lark.lexer.Token: 
+        if ast.value in variables_dict : return variables_dict[ast.value]
+        else: return parameters[ast.value]
     if ast.data == "parenthesis": 
         return asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
     
@@ -193,7 +197,7 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
     if ast.data == "dereferencing":
         deref_child = ast.children[0]
         if (deref_child.data == "single_deref"):
-            type1 = variables_dict[deref_child.children[1].value]
+            type1 = asm_compare_types_expression(deref_child.children[1], variables_dict, parameters)
             
         
         if (deref_child.data == "expr_deref"):
@@ -205,16 +209,6 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
             type1 = type1[:-1]
 
         return type1
-
-    # if ast.data == "eltab_read":
-    #     # tabToPt(ast.children[0])
-    #     print("asm_compare_type_expr, eltab_read, marche que pour l'exemple dans cours_script")
-    #     return "int"
-    
-    # if ast.data == "eltab_write":
-    #     # tabToPt(ast.children[0])
-    #     print("asm_compare_type_expr, eltab_write, marche que pour l'exemple dans cours_script")
-    #     return "int"
 
 
     if ast.data == "eltab_read" or ast.data == "eltab_write":
@@ -256,8 +250,6 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         if ast.data == "variable":
             # assert type(variables_dict) == dict
             # assert(len(variables_dict) >= 1)
-            if parameters != None and ast.children[0].value in parameters : 
-                return f"mov rax, {getRegister(ast.children[0].value ,variables_dict_len= len(variables_dict) ,  parameters=list(parameters.keys()) )}"
             return f"mov rax, [{ast.children[0].value}]"
         else: return f"mov rax, {ast.children[0].value}"
     
@@ -348,20 +340,12 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         return asm_dereferencing_value(ast.children[0], variables_dict, parameters)
 
 
-
-
     if ast.data == "eltab_read":
         tpt = tabToPt(ast.children[0])
-        # print("etlab_read in expr\n", tpt.pretty())
         asm_instruct = asm_dereferencing_value(tpt, variables_dict, parameters)
-        # print(asm_instruct)
         return asm_instruct
 
 
-    # if ast.data == "eltab_read":
-    #     res = asm_read_eltab(ast.children[0], variables_dict, parameters)
-    #     #print(res)
-    #     return res
 
 
     raise AssertionError("Wrong or not implemented", ast)
@@ -492,40 +476,6 @@ def asm_adressing(ast):
 
 
 
-# def asm_write_eltab(ast, variables_dict, parameters):
-#     # renvoie l'adresse de l'élément du tableau
-
-#     # calcule la valeur de l'expression de l'indice et le place dans rax
-#     expr = asm_expression(ast.children[1], variables_dict, parameters)
-
-#     # calcule le pointeur du tableau et le met dans rax
-#     if ast.data == "simple_tab":
-#         if parameters != None and ast.children[0].value in parameters : 
-#             tab = f"mov rax, {getRegister(ast.children[0].value ,variables_dict_len= len(variables_dict) ,  parameters=list(parameters.keys()) )}"
-#         else:
-#             tab = f"mov rax, {ast.children[0].value}"
-#     else:   # tableau de tableaux
-#         tab = asm_write_eltab(ast.children[0], variables_dict, parameters)
-
-#     return f"""
-#     {tab}
-#     mov rbx, rax
-#     {expr}
-#     mov rax, rbx + [rax]
-#     """
-
-# def asm_read_eltab(ast, variables_dict, parameters):
-#     # renvoie le contenu de l'élément du tableau
-
-#     return f""" {asm_write_eltab(ast, variables_dict, parameters)}      
-#     mov rax, [rax]"""
-
-
-
-
-
-
-
 
 
 
@@ -612,9 +562,12 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
     
     # print("comm", ast)
     if ast.data == "assignment":
+        
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
         type2 = asm_compare_types_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters) 
-        if  type1 != type2 : raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}")  
+        if  type1 != type2 :
+
+            raise TypeError(f"Wrong type assignment cannot assign {type2} to {type1}")  
         
 
         rexpr = asm_expression(ast.children[1], variables_dict= variables_dict, parameters= parameters)
@@ -623,17 +576,10 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 
             # a regrouper pour pouvoir generaliser au leftexpression
 
-            if (parameters != None) and ast.children[0].children[0].value in parameters:
-                
-                if ast.children[1].data == 'function_call' and ast.children[1].children[0].children[0].value not in funcs_arg_len : 
-                    raise ValueError(f'Called function {ast.children[1].children[0].children[0].value} but it was never defined !')
-                return  f"""{rexpr}
-                    mov {getRegister(ast.children[0].children[0].value, variables_dict_len=len(variables_dict) , parameters=list(parameters.keys()))} , rax
-                """
-            else: 
-                lexpr = asm_lexpression(ast.children[0], variables_dict, parameters)
-                return asm_command_assign(ast.children[0].data, lexpr, rexpr)
-            
+        
+            lexpr = asm_lexpression(ast.children[0], variables_dict, parameters)
+            return asm_command_assign(ast.children[0].data, lexpr, rexpr)
+        
             if ast.children[1].data == 'function_call':
                 ensure_correct_args_func(ast.children[1], variable_parameters=variables_dict , function_param_parameters= parameters)
                 return f"""
@@ -659,9 +605,10 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         if variables_dict != None and  ast.children[1].value in variables_dict : type2 = variables_dict[ast.children[1].value]+"*"
         if parameters != None and ast.children[1].value in parameters : type2 = parameters[ast.children[1].value]+"*"
 
-        # print("adressing", ast, type1, type2)
+        type2 = asm_compare_types_expression(ast.children[1],variables_dict,parameters)+"*"
+        
 
-        if type1 != type2: raise TypeError(f"Wrong type assignment canoot assign {type2} to {type1}") 
+        if type1 != type2: raise TypeError(f"Wrong type at line {ast.line} assignment cannot assign  {type2} to {type1}") 
         c = ast.children[0]
         lexpr = asm_lexpression(c, variables_dict, parameters)
         # print(asm_command_assign(c.data, lexpr, asm_adressing(ast.children[1])))
@@ -746,6 +693,8 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
     if ast.data == "print":
         #Debug prints
         
+        
+
         if type(ast.children[0]) == lark.lexer.Token:
             
             if ast.children[0].type == "STRING" :
@@ -780,7 +729,6 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
                     call printf
                     add rsp, {len(chunks)*8 + 8}
                 """
-            
 
             
         
@@ -881,6 +829,7 @@ def asm_func(ast):
     for child in ast.children:
         if child.data == "function":
             func_name = child.children[1].value
+
             func_args[func_name] = dict()
             child_list = child.children[1:] 
             args = child_list[1]
@@ -919,10 +868,20 @@ def asm_func(ast):
             #Vars contains the list of variables that were collected by asm_infunc_declare_vars_list
             i = 0
             for key in vars:
-                
+                #BACKHERE
                 var_dec += f"mov qword [rbp - {8*(i+1)}],0\n" 
                 script = script.replace(f"[{key}]", f"[rbp - {(i+1)*8}]" )
+                script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1)*8}]" )
                 i = i + 1
+
+            i = 0
+            for key in arg_list_to_replace:
+                print( f"replacing {key} with {getRegister(key, 0 ,arg_list_to_replace)}")
+                script = script.replace(f"[{key}]", getRegister(key, 0 ,arg_list_to_replace))
+                script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1)*8}]" )
+                i = i + 1
+
+
 
             func_script +=  f"""
             ;This is a function
