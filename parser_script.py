@@ -61,7 +61,8 @@ def asm_declare_vars(vars : list):
     ret = ""
     for var in vars:
         if "[" in vars[var]:
-            len = vars[var][-2]
+
+            len = vars[var][vars[var].find("[") + 1]
             ret += f"""asm_static_tab_{var} times {len} dq 0
             {var} : dq 0\n"""
         else:
@@ -213,6 +214,12 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
 
     if ast.data == "eltab_read" or ast.data == "eltab_write":
         return asm_types_eltab(ast.children[0], variables_dict, parameters)
+
+    if ast.data == "len":
+        type_expr = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+        if "[" not in type_expr:
+            raise TypeError(f"Wrong Type {type_expr} not an array")
+        return "int"
         
 
     raise AssertionError("Wrong or not implemented", ast)
@@ -345,6 +352,10 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         asm_instruct = asm_dereferencing_value(tpt, variables_dict, parameters)
         return asm_instruct
 
+    if ast.data == "len":
+        type_tab = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+        l = type_tab[type_tab.find("[")+1]
+        return f"mov rax, {l}"
 
 
 

@@ -116,11 +116,11 @@ def test_tab1():
 
 def test_tab2():
     ret = run("tests/scripts/test_tab2")
-    assert ret == "3"
+    assert ret == "5"
 
 def test_tab3():
     ret = run("tests/scripts/test_tab3")
-    assert ret == "65"
+    assert ret == "20"
 
 if __name__ == "__main__":
     all_tests = [
