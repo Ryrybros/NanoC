@@ -1,5 +1,5 @@
 
-OPBIN: /==|>=|<=|[+\-*\/<>]/
+OPBIN: /==|>=|<=|&&|[+\-*\/<>]/
 TYPE_STR : "str"
 TYPE_INT : "int"
 POINTER_ORDER : "*"+

@@ -111,6 +111,22 @@ func_args = dict()
 
 registers = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"]
 
+def registerSaver(parameters : dict, start : bool):
+    ret = ""
+    push_pop = ""
+    if start : push_pop = "push"
+    else: push_pop = "pop"
+    if start:
+        for param in parameters:
+            ret += f"""
+            push {getRegister(param,variables_dict_len= 0,parameters=list(parameters.keys()))}
+            """
+    else:
+        for param in reversed(parameters):
+            ret += f"""
+            pop {getRegister(param,variables_dict_len= 0,parameters=list(parameters.keys()))}
+            """
+    return ret
 
 def getRegister(arg : str , variables_dict_len: int ,parameters : list, ind : int = None):
     # print("compare", ast)
@@ -152,10 +168,10 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
             
             if parameters != None and ast.children[0].value in parameters :
                 return parameters[ast.children[0].value]
-            assert type(variables_dict) == dict
-            assert(len(variables_dict) >= 1)
+            
 
             k = ast.children[0].value
+            
             if not(k in variables_dict.keys()):
                 raise ValueError(f"Not defined variable {k}")
             
@@ -289,9 +305,23 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
             boolean = f"""sete al
             movzx rax, al"""
 
+        if op == "&&":
+            command = "and"
+
         if ast.data == "dereferencing":
             None
 
+        if command == "div":
+            return f"""
+            {asm_expression(ast.children[2], variables_dict= variables_dict, parameters=parameters)}
+            push rax
+            {asm_expression(ast.children[0],  variables_dict=variables_dict, parameters=parameters)}
+            pop rbx
+            push rdx
+            xor rdx, rdx
+            div rbx
+            pop rdx
+            """
         return f""" 
             {asm_expression(ast.children[2], variables_dict= variables_dict, parameters=parameters)}
             push rax
@@ -423,8 +453,12 @@ def asm_allocation(ast, variables_dict, parameters):
     assert(len(ast.children) == 2)
     return f"""
     {asm_expression(ast.children[1], variables_dict, parameters)}
+    {registerSaver(parameters,True)}
     mov rdi, rax
-    call malloc"""
+    call malloc
+    {registerSaver(parameters,False)}
+    """
+
 
 
 def asm_adressing(ast):
@@ -607,6 +641,7 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
     if ast.data == "if_else":
         test = asm_expression(ast.children[0].children[0], variables_dict=variables_dict, parameters= parameters)
         script = asm_command(ast.children[0].children[1], variables_dict=variables_dict,  parameters= parameters)
+
         script_else = asm_command(ast.children[1].children[0], variables_dict=variables_dict,  parameters= parameters)
 
         cpt_if_while[0] += 1
@@ -675,16 +710,15 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 
                     {allocation}
 
+                    {registerSaver(parameters,True)}
 
-                    push rdi
-                    push rsi
                     push rax
                     mov rdi, rsp
                     xor rax, rax
                     call printf
                     pop rax
-                    pop rsi
-                    pop rdi
+                    {registerSaver(parameters,False)}
+                    
                     add rsp, {len(chunks)*8 + 8}
                 """
 
@@ -702,16 +736,16 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
             elif ast.children[0].children[0] == "int" :
 
                 return f"""
-                    push rdi
-                    push rsi
+                    mov rbx, [{ast.children[1].children[0]}]
+                    {registerSaver(parameters,True)}
                     push rax
                     mov rdi, asm_int_prtr
-                    mov rsi, [{ast.children[1].children[0]}]
+                    mov rsi, rbx
                     xor rax, rax
                     call printf
                     pop rax
-                    pop rsi
-                    pop rdi
+
+                    {registerSaver(parameters,False)}
                 """
                 #HERE
         else : 
@@ -720,16 +754,15 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
             
             if ast.children[0].children[0] == "int" :
                 return stret + f"""
-                    push rdi
-                    push rsi
+                    {registerSaver(parameters,True)}
                     push rax
                     mov rdi, asm_int_prtr
                     mov rsi, rax
                     xor rax, rax
                     call printf
                     pop rax
-                    pop rsi
-                    pop rdi
+                    {registerSaver(parameters,False)}
+
                 """
             
             #Debug
@@ -764,6 +797,7 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 #     if  nb_args != expected_nb_args  : raise ValueError(f"Error : function {ast.children[0].children[0].value} expected {expected_nb_args} arguments but got {nb_args}" )
         
 
+
 def asm_func(ast):
     func_script = ""
     
@@ -795,7 +829,7 @@ def asm_func(ast):
             if len(vars) != 0 or max( len(arg_list_to_replace) - 6, 0) != 0:
                 var_dec = f"""
                     ; function args > nb_registers = {max( len(arg_list_to_replace) - 6, 0)}
-                    sub rsp, {int( 8*( ( len(vars) + max( len(arg_list_to_replace) - 6, 0) ) / 16))*16  + 16}
+                    sub rsp, {int( 8*( ( len(vars) + max( len(arg_list_to_replace), 0) ) / 16))*16  + 16}
                 """
             else: var_dec = ""
             
@@ -823,16 +857,16 @@ def asm_func(ast):
             i = 0
             for key in vars:
                 #BACKHERE
-                var_dec += f"mov qword [rbp - {8*(i+1)}],0\n" 
-                script = script.replace(f"[{key}]", f"[rbp - {(i+1)*8}]" )
-                script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1)*8}]" )
+                var_dec += f"mov qword [rbp - {8*(i+1 + len(arg_list_to_replace))}],0\n" 
+                script = script.replace(f"[{key}]", f"[rbp - {(i+1 + len(arg_list_to_replace))*8}]" )
+                script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1 + len(arg_list_to_replace))*8}]" )
                 i = i + 1
 
             i = 0
             for key in arg_list_to_replace:
                 print( f"replacing {key} with {getRegister(key, 0 ,arg_list_to_replace)}")
                 script = script.replace(f"[{key}]", getRegister(key, 0 ,arg_list_to_replace))
-                script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1)*8}]" )
+                script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1 + len(arg_list_to_replace))*8}]" )
                 i = i + 1
 
 
