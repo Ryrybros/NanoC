@@ -1,0 +1,13 @@
+main() {
+    int[3] t;
+    t[0] = 3;
+    int a;
+    a = 15;
+    t[1] = a;
+    int b;
+    b = t[1] + t[0];
+    //print(int, t[0]);
+    print(int, b);
+    //print(int, t[2]);
+    return b;
+}

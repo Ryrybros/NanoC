@@ -82,7 +82,7 @@ def test_func8():
 
 def test_basique0():
     #This test tests that global vars can be used in functions
-    ret = run("tests/scripts/test_basique0")
+    ret = run("tests/scripts/test_basique.c")
     assert ret == "6"
 
 def test_pt0():
@@ -122,7 +122,22 @@ def test_leftexpr_func1():
 def test_malloc0():
     ret = run("tests/scripts/test_malloc0")
     assert ret == "5"
-        
+
+def test_tab0():
+    ret = run("tests/scripts/test_tab0")
+    assert ret == "18"
+
+def test_tab1():
+    ret = run("tests/scripts/test_tab1")
+    assert ret == "50"
+
+def test_tab2():
+    ret = run("tests/scripts/test_tab2")
+    assert ret == "5"
+
+def test_tab3():
+    ret = run("tests/scripts/test_tab3")
+    assert ret == "20"
 
 def test_malloc_func():
     ret = run("tests/scripts/test_malloc_func")
@@ -151,9 +166,11 @@ if __name__ == "__main__":
         test_malloc_func,
         test_leftexpr_pt1,
         test_leftexpr_func1,
-        test_merge_sort
-
-
+        test_merge_sort,
+        test_tab0,
+        test_tab1,
+        test_tab2,
+        test_tab3
 ]
     t = 1
     for test in all_tests:

@@ -9,3 +9,4 @@ temp_script
 __pycache__
 venv
 .gitignore
+test.asm

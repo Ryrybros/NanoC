@@ -32,10 +32,11 @@ expression : NAME -> variable
         | expression OPBIN expression -> bin
         | "(" expression ")" -> parenthesis
         | SIGNED_NUMBER -> int 
+        | "len" "(" expression ")" -> len
         | func_call -> function_call
         | deref -> dereferencing
         | eltab -> eltab_read
-        | "len" "(" expression ")" -> len
+        
 
 leftexpression : NAME -> variable | deref -> dereferencing | eltab -> eltab_write
 

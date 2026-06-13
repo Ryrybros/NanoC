@@ -5,11 +5,18 @@ extern printf; e.g stdio.h
     asm_ret_msg: db 10,"Program executed successfully." ,10 , 10, 0
     asm_int_prtr : db "%d" , 0
     argv : dq 0
+<<<<<<< HEAD
     T : dq 0
 T2 : dq 0
 R : dq 0
 s : dq 0
 s2 : dq 0
+=======
+    t : dq 0
+asm_static_tab_p times 5 dq 0
+            p : dq 0
+a : dq 0
+>>>>>>> tab_types
    global main
     section .text
             ;This is a function
@@ -1406,8 +1413,14 @@ call merge;end_func_call
             push rbp            
             mov rbp, rsp
             mov [argv], rsi
+
+            mov rax, asm_static_tab_p
+            mov [p], rax
+
+
             
             
+<<<<<<< HEAD
             mov rax, 10
             mov [s] , rax
             
@@ -1498,9 +1511,30 @@ call merge;end_func_call
             mov rax, [s]
             push rax
             mov rax, 2
+=======
+            
+    mov rax, 8
+    mov rdi, rax
+    call malloc
+            mov [t] , rax
+            
+                   
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
             pop rbx
             imul  rax, rbx
             
+        
+            push rax
+            mov rax, [t]
+>>>>>>> tab_types
+            pop rbx
+            imul  rax, rbx
+            
+<<<<<<< HEAD
         
             pop rbx
             imul  rax, rbx
@@ -1509,6 +1543,9 @@ call merge;end_func_call
             mov [s2] , rax
             
             ;This is a function call
+=======
+             
+>>>>>>> tab_types
 
                 push rdi
                 
@@ -1587,6 +1624,7 @@ mov rax, [T]
                  
             mov rax, 1
             push rax
+<<<<<<< HEAD
             mov rax, [s]
             pop rbx
             sub rax, rbx
@@ -1615,10 +1653,23 @@ call mergeSort;end_func_call
             mov rax, [s]
             push rax
             mov rax, 2
+=======
+            mov rax, 50
+            pop rbx
+            mov [rbx] , rax
+            
+                   
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
+>>>>>>> tab_types
             pop rbx
             imul  rax, rbx
             
         
+<<<<<<< HEAD
             mov [s2] , rax
             
                     
@@ -1656,6 +1707,139 @@ call mergeSort;end_func_call
 
                     push rax
                     mov rdi, rsp
+=======
+            push rax
+            mov rax, [p]
+            pop rbx
+            add rax, rbx
+            
+             
+
+            push rax
+            mov rax, [t]
+            pop rbx
+            mov [rbx] , rax
+            
+                   
+     
+             
+            mov rax, 2
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+                    
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+            mov rax, [p]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            pop rbx
+            add rax, rbx
+            
+             
+
+            push rax
+            mov rax, 15
+            pop rbx
+            mov [rbx] , rax
+            
+             
+                    
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+                    
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+            mov rax, [p]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            push rax
+                    
+     
+             
+            mov rax, 2
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+                    
+     
+             
+            mov rax, 1
+            push rax
+            mov rax, 8
+            pop rbx
+            imul  rax, rbx
+            
+        
+            push rax
+            mov rax, [p]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            pop rbx
+            add rax, rbx
+            
+             
+      
+    mov rax, [rax]
+            pop rbx
+            add rax, rbx
+            
+        
+            mov [a] , rax
+            
+                    mov rdi, asm_int_prtr
+                    mov rsi, [a]
+>>>>>>> tab_types
                     xor rax, rax
                     call printf
                     pop rax

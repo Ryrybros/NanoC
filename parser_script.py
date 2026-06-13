@@ -17,12 +17,13 @@ var_data_rec = ( 'parameter',   'sequence', 'if_else', 'while',  "main", "start"
 
 cpt_if_while = [-1]
 
+main_global_vars = dict()
+
+
 def asm_declare_vars_list(ast, vars : dict):
     # Cette fonction dans certains cas renvoie une string, d'autre fois modif par effet de bord une liste
     # if ast.data in ignore_data : return 
     if ast.data == 'declaration' :
-        
-
         vars[ast.children[1].value] =  ast.children[0].value  
         return
     if ast.data in var_data_rec:
@@ -58,10 +59,24 @@ mov [{v}], rax
 
 def asm_declare_vars(vars : list):
     ret = ""
-    for var in vars: ret += f"{var} : dq 0\n"
+    for var in vars:
+        if "[" in vars[var]:
+
+            len = vars[var][vars[var].find("[") + 1]
+            ret += f"""asm_static_tab_{var} times {len} dq 0
+            {var} : dq 0\n"""
+        else:
+            ret += f"{var} : dq 0\n"
     return ret
 
 
+def asm_ptr_tab(vars : list):
+    ret = ""
+    for var in vars:
+        if "[" in vars[var]:
+            ret += f"""mov rax, asm_static_tab_{var}
+            mov [{var}], rax\n"""
+    return ret
 
 
 
@@ -147,13 +162,13 @@ def isPointer(tipe):
 
 def tabToPt(ast):
     if ast.data == "simple_tab":
-        tpt = lark.Tree("expr_deref", [lark.Token("POINTER_ORDER", "*"), lark.Tree('bin', [lark.Tree('variable', [ast.children[0]]), lark.Token('OPBIN', '+'), ast.children[1]])])
-        # print(tpt.pretty())
+        tpt = lark.Tree("expr_deref", [lark.Token("POINTER_ORDER", "*"), lark.Tree('bin', [lark.Tree('variable', [ast.children[0]]), lark.Token('OPBIN', '+'), lark.Tree('bin', [lark.Tree('int', [lark.Token('SIGNED_NUMBER', 8)]), lark.Token('OPBIN', '*'), ast.children[1]])])])
+        #print(tpt.pretty())
         return tpt
 
     if ast.data == "tab_tab":
-        tpt =  lark.Tree('expr_deref', [lark.Token('POINTER_ORDER', '*'), lark.Tree('bin', [lark.Tree('dereferencing', [tabToPt(ast.children[0])]), lark.Token('OPBIN', '+'), ast.children[1]])])
-        # print(tpt.pretty())
+        tpt =  lark.Tree('expr_deref', [lark.Token('POINTER_ORDER', '*'), lark.Tree('bin', [lark.Tree('dereferencing', [tabToPt(ast.children[0])]), lark.Token('OPBIN', '+'), lark.Tree('bin', [lark.Tree('int', [lark.Token('SIGNED_NUMBER', 8)]), lark.Token('OPBIN', '*'), ast.children[1]])])])
+        #print(tpt.pretty())
         return tpt
 
     # print("pb", ast.pretty())
@@ -216,13 +231,40 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
 
         return type1
 
-    if ast.data == "eltab_read":
-        # tabToPt(ast.children[0])
-        print("asm_compare_type_expr, eltab_read, marche que pour l'exemple dans cours_script")
-        return "int"
 
+    if ast.data == "eltab_read" or ast.data == "eltab_write":
+        return asm_types_eltab(ast.children[0], variables_dict, parameters)
+
+    if ast.data == "len":
+        type_expr = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+        if "[" not in type_expr:
+            raise TypeError(f"Wrong Type {type_expr} not an array")
+        return "int"
+        
 
     raise AssertionError("Wrong or not implemented", ast)
+
+
+def asm_types_eltab(ast, variables_dict : dict, parameters : dict):
+    # Vérifie d'abord si l'expression est bien un entier
+        type_expr = asm_compare_types_expression(ast.children[1], variables_dict, parameters)
+        if type_expr != "int" : raise TypeError(f"Wrong Type {type_expr} not an int")
+        
+        # Renvoie le type de l'élément du tableau
+        if ast.data == "simple_tab":
+            type_tab = variables_dict[ast.children[0].value]    # Type du tableau
+            if "[" in type_tab:         # Tableau statique
+                i = type_tab.find("[")
+                return type_tab[:i] + type_tab[i+3:]
+            else:                       # Pointeur
+                return type_tab[:-1]
+        if ast.data == "tab_tab":   # eltab.data == "tab_tab"
+            type_tab = asm_types_eltab(ast.children[0], variables_dict, parameters)
+            if "[" in type_tab:         # Tableau statique
+                return type_tab[:-3]
+            else:                       # Pointeur
+                return type_tab[:-1]
+        raise AssertionError("Wrong or not implemented", ast)
 
 
 def asm_expression(ast, variables_dict :dict , parameters : dict):
@@ -368,12 +410,18 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
     if ast.data == "dereferencing":
         return asm_dereferencing_value(ast.children[0], variables_dict, parameters)
 
+
     if ast.data == "eltab_read":
         tpt = tabToPt(ast.children[0])
-        # print("etlab_read in expr\n", tpt.pretty())
         asm_instruct = asm_dereferencing_value(tpt, variables_dict, parameters)
-        # print(asm_instruct)
         return asm_instruct
+
+    if ast.data == "len":
+        type_tab = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+        l = type_tab[type_tab.find("[")+1]
+        return f"mov rax, {l}"
+
+
 
     raise AssertionError("Wrong or not implemented", ast)
 
@@ -387,6 +435,12 @@ def asm_lexpression(ast, variable_dict : dict, parameters :  dict):
 
     if ast.data == "variable":
         return f"mov [{ast.children[0].value}] , rax"
+    
+    if ast.data == "eltab_write":
+        tpt = tabToPt(ast.children[0])
+        # print("etlab_read in expr\n", tpt.pretty())
+        # print(asm_instruct)
+        return asm_assign_dereferencing(tpt, variable_dict, parameters)
 
         
         
@@ -509,7 +563,6 @@ def asm_adressing(ast):
 
 
 
-
 ##########################################End_Expressions###########################################
 
 
@@ -619,11 +672,17 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
             lexpr = asm_lexpression(c, variables_dict, parameters)
             return asm_command_assign(c.data, lexpr, rexpr)
 
+        if ast.children[0].data == "eltab_write":
+            c = ast.children[0]
+            lexpr = asm_lexpression(c, variables_dict, parameters)
+            return asm_command_assign("dereferencing", lexpr, rexpr)
             
 
     if ast.data == "addressing":
-
+        print(variables_dict)
         type1 = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+        if variables_dict != None and  ast.children[1].value in variables_dict : type2 = variables_dict[ast.children[1].value]+"*"
+        if parameters != None and ast.children[1].value in parameters : type2 = parameters[ast.children[1].value]+"*"
 
         type2 = asm_compare_types_expression(ast.children[1],variables_dict,parameters)+"*"
         
@@ -932,6 +991,7 @@ def asm_main(ast ,variables_dict : dict()):
         if child.data == "main":
 
             decl_vars_main, init_vars_main = asm_init_vars_main(child.children[0])
+            ptr_tab = asm_ptr_tab(variables_dict)
             script = asm_command(child.children[1], variables_dict= variables_dict, parameters= decl_vars_main)
             returned = asm_expression(child.children[2].children[0], variables_dict= variables_dict, parameters= decl_vars_main)
             # Ignore completement le returned
@@ -940,6 +1000,9 @@ def asm_main(ast ,variables_dict : dict()):
             push rbp            
             mov rbp, rsp
             mov [argv], rsi
+
+            {ptr_tab}
+
             {init_vars_main}
             {script}
             
@@ -977,6 +1040,8 @@ def assembly(script):
     fun_args = fun_ret[1]
 
     asm_declare_vars_list(t, vars)
+
+    main_global_vars = vars
 
     main_prog, init_vars_main = asm_main(t, vars)
 
