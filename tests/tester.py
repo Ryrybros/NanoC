@@ -146,7 +146,15 @@ def test_malloc_func():
 def test_merge_sort():
     ret = run("tests/scripts/test_merge_sort")
     assert ret == "0 , 36 , 48 , 42 , 24 , 0 , -24 , -42 , -48 , -36 , Final  -48 , -42 , -36 , -24 , 0 , 0 , 24 , 36 , 42 , 48 , ".replace(" ","")
+
+def test_merge_sort_tab():
+    ret = run("tests/scripts/test_merge_sort_tab")
+    assert ret == "0 , 36 , 48 , 42 , 24 , 0 , -24 , -42 , -48 , -36 , Final  -48 , -42 , -36 , -24 , 0 , 0 , 24 , 36 , 42 , 48 , ".replace(" ","")
         
+def test_func_8args():
+    ret = run("tests/scripts/test_func_8args")
+    assert ret == "-33 and 0 , 36 , 48 , 42 , 24 , 0 , -24 , -42 , -48 , -36 , -103".replace(" ", "")
+
 if __name__ == "__main__":
     all_tests = [
         test_basique0,
@@ -157,6 +165,7 @@ if __name__ == "__main__":
         test_func5,
         test_func6,
         test_func8,
+        test_func_8args,
         test_pt0,
         test_pt_func0,
         test_pt_func1,
@@ -167,6 +176,7 @@ if __name__ == "__main__":
         test_leftexpr_pt1,
         test_leftexpr_func1,
         test_merge_sort,
+        test_merge_sort_tab,
         test_tab0,
         test_tab1,
         test_tab2,

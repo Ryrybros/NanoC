@@ -154,7 +154,7 @@ def getRegister(arg : str , variables_dict_len: int ,parameters : list, ind : in
     else : index = ind
 
     if index < len(registers):    return registers[index]
-    else : return f"[ rbp + {16 + (index - 6 - 1)*8} ]"
+    else : return f"[ rbp + {16 + (index - 6)*8} ]"
 
 
 def isPointer(tipe):
@@ -297,9 +297,11 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         index = 0
         for kid in ast.children[0].children[1].children:
             
-            arg_script += asm_expression(kid, variables_dict= variables_dict, parameters=parameters)
             if index < 6:
+
                 #Pushes all registers to ensure that they are not lost after func call
+                arg_script += asm_expression(kid, variables_dict= variables_dict, parameters=parameters)
+                
                 start_arg_script += f"""
                 push {getRegister(kid, variables_dict_len= len(variables_dict), parameters=ast.children[0].children[1].children, ind=index)}
                 
@@ -307,17 +309,20 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
 
                 arg_script += f"""
                 push rax
+
                 """
             else:
-                start_arg_script += f"""
+                arg_script = f"""
+                {asm_expression(kid, variables_dict= variables_dict, parameters=parameters)}
                 push rax
-                """
+                """ + arg_script
             
             
             index += 1
         index -= 1
 
-
+        arg_script = """;start arg scipt 
+        """  + arg_script + "; here for arg"
 
         index_rev = index
         for kid in ast.children[0].children[1].children[::-1]:
@@ -327,11 +332,7 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
                 end_arg_script += f"""
                 pop {getRegister(kid, variables_dict_len= len(variables_dict), parameters=ast.children[0].children[1].children, ind=index_rev)}
                 """
-            else:
-                end_arg_script += f"""
-                pop rax
-                mov {getRegister(kid, variables_dict_len= len(variables_dict), parameters=ast.children[0].children[1].children, ind=index_rev)}, rax
-                """
+
             
             index_rev -= 1
 
