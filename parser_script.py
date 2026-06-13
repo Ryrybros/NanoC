@@ -252,7 +252,9 @@ def asm_types_eltab(ast, variables_dict : dict, parameters : dict):
         
         # Renvoie le type de l'élément du tableau
         if ast.data == "simple_tab":
-            type_tab = variables_dict[ast.children[0].value]    # Type du tableau
+            
+            type_tab = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+                # Type du tableau
             if "[" in type_tab:         # Tableau statique
                 i = type_tab.find("[")
                 return type_tab[:i] + type_tab[i+3:]

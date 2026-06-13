@@ -1,31 +1,37 @@
 
 main(){
-    int c;
+    int[10] T;
+
+    fill(T);
     
 
-    c = hello(-10) + hallo(2);
-    
-    print(int,c);
-    
+    print_tab(T);
+
     return 0; 
 }
 
+void fill(int[10] t){
+    int n;
+    n = len(t);
+    int i;
 
-int hello(int x){
-    int a;
-    a = 10 + x;
-    x = a +20;
-    a = a*x;
-    
-    return a;
-    
+    while( i < n){
+        t[i] = i*i + 10;
+        i = i + 1;
+    }
+    return 0;
 }
 
-int hallo(int x){
-    return x*x;
-}
+void print_tab(int[10] T){
+    int i;
+    int size ;
+    size = len(T);
 
-int he(){
-    int a;
-    return a;
+    i = 0;
+    while(i < size){
+        print(int, T[i]);
+        print(str, " , ");
+        i = i +1;
+    }
+    return 0;
 }
