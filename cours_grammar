@@ -21,9 +21,8 @@ deref :  POINTER_ORDER NAME -> single_deref | POINTER_ORDER "(" expression ")" -
 exprstr : STRING -> str
         | NAME -> variable
 
-tableau: "[" (NAME ",")* NAME "]"
-       | "[" (SIGNED_NUMBER ",")* SIGNED_NUMBER "]"
-       | "[" (tableau ",")* tableau "]"
+tableau: "[" (NAME ",")* NAME "]"                       -> var_tab
+       | "[" (SIGNED_NUMBER ",")* SIGNED_NUMBER "]"     -> int_tab
 eltab: NAME "[" expression "]" -> simple_tab
      | eltab "[" expression "]" -> tab_tab
 
@@ -53,7 +52,7 @@ else: "else" "{" command "}"
 for: "for" "(" "int" NAME "=" expression ";" NAME "<" expression ";" NAME"++" ")" "{" command "}"
 command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | leftexpression "=" expression ";" -> assignment
-        | leftexpression "=" tableau ";" -> assignment
+        | leftexpression "=" tableau ";" -> assignment_tab
         | leftexpression "=" "&" NAME ";" -> addressing
         | NAME "=" exprstr ";" -> assignement_str
         | command* command -> sequence
@@ -65,6 +64,7 @@ command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | "print" "(" format "," expression ")" ";" -> print
         | "print" "(" "str" "," STRING ")" ";" -> print
         | TYPE NAME ";" -> declaration
+        | TYPE NAME "=" tableau ";" -> declaration_tab
         | func_call ";" -> function_call
         | "return" expression ";" -> return
         | "//" /.+/ -> comment
