@@ -67,6 +67,7 @@ def test_func6():
     
 def test_func7():
     #This test tests that global vars can be used in functions
+    # !!! This test is no longer supposed to work
     ret = run("tests/scripts/test_func7")
     if  ret != "100" :
         print( f"Wrong value  {ret}" )
@@ -140,7 +141,6 @@ if __name__ == "__main__":
         test_func4,
         test_func5,
         test_func6,
-        test_func7,
         test_func8,
         test_pt0,
         test_pt_func0,

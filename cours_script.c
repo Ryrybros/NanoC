@@ -16,13 +16,16 @@ int hello(int x){
     a = 10 + x;
     x = a +20;
     a = a*x;
-    if (a < 10){
+    
     return a;
-    }else{
-        pass;
-    }
+    
 }
 
 int hallo(int x){
     return x*x;
+}
+
+int he(){
+    int a;
+    return a;
 }

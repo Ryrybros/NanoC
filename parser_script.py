@@ -106,6 +106,8 @@ def asm_declare_vars(vars : list):
 funcs_arg_len = dict() #Has to be global to check if func calls respec nb args of funcs
 func_types = dict()
 func_args = dict()
+current_function = ["Unassigned"]
+
 
 #The code is parsed
 
@@ -584,7 +586,7 @@ def asm_command_assign(assign_catego, lexpr, rexpr):
 
 def asm_command(ast, variables_dict : dict , parameters : dict):
     
-    # print("comm", ast)
+    
     if ast.data == "assignment":
         
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
@@ -810,7 +812,10 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 
     if ast.data == "return":
         returned = asm_expression(ast.children[0], variables_dict=variables_dict, parameters=parameters) #will put return into rax
-        
+        ret_type = asm_compare_types_expression(ast.children[0], variables_dict,parameters)
+        func_type = func_types[current_function[0]]
+        if func_type != ret_type and func_type != "void" :
+            raise TypeError(f"Wrong returned type for function {current_function[0]}, expected {func_type} and found {ret_type}")
         return f"""
         {returned}
         mov rsp, rbp           
@@ -828,7 +833,6 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 #     expected_nb_args = funcs_arg_len[ast.children[0].children[0].value] 
 #     if  nb_args != expected_nb_args  : raise ValueError(f"Error : function {ast.children[0].children[0].value} expected {expected_nb_args} arguments but got {nb_args}" )
         
-
 
 def asm_func(ast):
     func_script = ""
@@ -849,6 +853,7 @@ def asm_func(ast):
     for child in ast.children:
         if child.data == "function":
             func_name = child.children[1].value
+            current_function[0] = func_name
 
             func_args[func_name] = dict()
             child_list = child.children[1:] 
@@ -867,12 +872,14 @@ def asm_func(ast):
             
             arg_list_to_replace = [kid.children[1].value for kid in child_list[1].children ]
             arg_list_to_replace_types = [kid.children[0].value for kid in child_list[1].children ]
+        
+
             parameters_to_replace = dict()
             for i in range(len(arg_list_to_replace )):
                 parameters_to_replace[arg_list_to_replace[i]] = arg_list_to_replace_types[i]
-            
-            funcs_arg_len[child_list[0].value] = len(arg_list_to_replace)
 
+            funcs_arg_len[child_list[0].value] = len(arg_list_to_replace)
+            print("calling commands with : ", parameters_to_replace)
 
             script = asm_command(child_list[2], variables_dict= vars, parameters=parameters_to_replace)
             # returned = asm_expression(child_list[3].children[0], arg_list_to_replace)
@@ -902,9 +909,8 @@ def asm_func(ast):
                 i = i + 1
 
 
-            
-            print(func_types[func_name])
 
+            
             func_script +=  f"""
             ;This is a function
             {child_list[0]}:                    ;Name of func
@@ -924,7 +930,7 @@ def asm_main(ast ,variables_dict : dict()):
     for child in ast.children:
 
         if child.data == "main":
-            
+
             decl_vars_main, init_vars_main = asm_init_vars_main(child.children[0])
             script = asm_command(child.children[1], variables_dict= variables_dict, parameters= decl_vars_main)
             returned = asm_expression(child.children[2].children[0], variables_dict= variables_dict, parameters= decl_vars_main)
