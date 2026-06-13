@@ -76,6 +76,7 @@ mov [{v}], rax
 def asm_declare_vars(vars : list):
     ret = ""
     for var in vars:
+
         if "[" in vars[var]:
 
             len = vars[var][vars[var].find("[") + 1 : vars[var].find("]")]
@@ -676,8 +677,7 @@ def asm_command_assign(assign_catego, lexpr, rexpr):
 
 def asm_command(ast, variables_dict : dict , parameters : dict):
     
-    # print(parameters)
-    # print(current_function)
+    
     if ast.data == "assignment":
         
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
@@ -817,6 +817,10 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         return ""        
 
     if ast.data == "declaration":
+        
+        if "int[" in ast.children[0]:
+            if current_function[0] != "main": raise ValueError("Cannot initialize a static tab in function other than main")
+
         return ""
 
     if ast.data == "sequence":
@@ -979,14 +983,21 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 
     raise AssertionError("Wrong or not implemented", ast)
 
+def asm_ensure_return(ast):
+    sub_scopes = ["if_else"]
+    sub_return = False
+    root_return = False
+    # print(f" the tree \n {ast.pretty()} \n ")
+    if ast.data == "return": return True
 
-# def ensure_correct_args_func(ast):
-#     if ast.children[0].children[0].value not in funcs_arg_len : 
-#             raise ValueError(f'Called function {ast.children[0].children[0].value} but it was never defined !')
-#     nb_args = len(ast.children[0].children[1].children)
-#     expected_nb_args = funcs_arg_len[ast.children[0].children[0].value] 
-#     if  nb_args != expected_nb_args  : raise ValueError(f"Error : function {ast.children[0].children[0].value} expected {expected_nb_args} arguments but got {nb_args}" )
-        
+    if ast.data in sub_scopes:
+
+        sub_return =  asm_ensure_return(ast.children[0].children[1]) and asm_ensure_return(ast.children[1].children[0])
+
+    if ast.data in var_data_rec:
+        root_return =  asm_ensure_return(ast.children[0]) or asm_ensure_return(ast.children[1]) 
+    
+    return sub_return or root_return
 
 def asm_func(ast):
     func_script = ""
@@ -1008,6 +1019,8 @@ def asm_func(ast):
         if child.data == "function":
             func_name = child.children[1].value
             current_function[0] = func_name
+            
+            if not asm_ensure_return(child.children[3]) : raise TypeError(f"No return in at least one branch of function {func_name} of type {func_types[func_name]} if the type is void add return 0 to declare end of the function ")
 
             func_args[func_name] = dict()
             child_list = child.children[1:] 
@@ -1033,7 +1046,7 @@ def asm_func(ast):
                 parameters_to_replace[arg_list_to_replace[i]] = arg_list_to_replace_types[i]
 
             funcs_arg_len[child_list[0].value] = len(arg_list_to_replace)
-            print("calling commands with : ", parameters_to_replace)
+            
 
             script = asm_command(child_list[2], variables_dict= vars, parameters=parameters_to_replace)
             # returned = asm_expression(child_list[3].children[0], arg_list_to_replace)
@@ -1051,6 +1064,7 @@ def asm_func(ast):
             
             for key in vars:
                 #BACKHERE
+                
                 var_dec += f"mov qword [rbp - {8*(i+1 + len(arg_list_to_replace))}],0\n" 
                 script = script.replace(f"[{key}]", f"[rbp - {(i+1 + len(arg_list_to_replace))*8}]" )
                 script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1 + len(arg_list_to_replace))*8}]" )
@@ -1085,6 +1099,8 @@ def asm_main(ast ,variables_dict : dict()):
     for child in ast.children:
 
         if child.data == "main":
+            current_function[0] = "main"
+
 
             decl_vars_main, init_vars_main = asm_init_vars_main(child.children[0])
             ptr_tab = asm_ptr_tab(variables_dict)

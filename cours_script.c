@@ -1,9 +1,9 @@
 
-main(int a){
+main(){
     int c;
     
 
-    c = hello(-10);
+    c = hello(-10) + hallo(2);
     
     print(int,c);
     
@@ -16,5 +16,16 @@ int hello(int x){
     a = 10 + x;
     x = a +20;
     a = a*x;
-    return a;
+    if (a < 20){
+        return a;
+    }else{
+        pass;
+    }
+    
+    
+    
+}
+
+int hallo(int x){
+    return x*x;
 }
