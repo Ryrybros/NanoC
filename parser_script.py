@@ -265,26 +265,26 @@ def asm_types_eltab(ast, variables_dict : dict, parameters : dict):
 # Vérifie d'abord si l'expression est bien un entier
     type_expr = asm_compare_types_expression(ast.children[1], variables_dict, parameters)
     if type_expr != "int" : raise TypeError(f"Wrong Type {type_expr} not an int")
+    
+    # Renvoie le type de l'élément du tableau
+    if ast.data == "simple_tab":
         
-        # Renvoie le type de l'élément du tableau
-        if ast.data == "simple_tab":
-            
-            type_tab = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
-                # Type du tableau
-            if "[" in type_tab:         # Tableau statique
-                i = type_tab.find("[")
-                j = type_tab.find("]")
-                return type_tab[:i] + type_tab[j+1:]
-            else:                       # Pointeur
-                return type_tab[:-1]
-        if ast.data == "tab_tab":   # eltab.data == "tab_tab"
-            type_tab = asm_types_eltab(ast.children[0], variables_dict, parameters)
-            if "[" in type_tab:         # Tableau statique
-                i = type_tab.rfind("[")
-                return type_tab[:i]
-            else:                       # Pointeur
-                return type_tab[:-1]
-        raise AssertionError("Wrong or not implemented", ast)
+        type_tab = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
+            # Type du tableau
+        if "[" in type_tab:         # Tableau statique
+            i = type_tab.find("[")
+            j = type_tab.find("]")
+            return type_tab[:i] + type_tab[j+1:]
+        else:                       # Pointeur
+            return type_tab[:-1]
+    if ast.data == "tab_tab":   # eltab.data == "tab_tab"
+        type_tab = asm_types_eltab(ast.children[0], variables_dict, parameters)
+        if "[" in type_tab:         # Tableau statique
+            i = type_tab.rfind("[")
+            return type_tab[:i]
+        else:                       # Pointeur
+            return type_tab[:-1]
+    raise AssertionError("Wrong or not implemented", ast)
 
 
 def asm_types_tab(ast, variables_dict : dict, parameters : dict):
@@ -676,7 +676,8 @@ def asm_command_assign(assign_catego, lexpr, rexpr):
 
 def asm_command(ast, variables_dict : dict , parameters : dict):
     
-    
+    # print(parameters)
+    # print(current_function)
     if ast.data == "assignment":
         
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
@@ -1047,6 +1048,7 @@ def asm_func(ast):
     
             #Vars contains the list of variables that were collected by asm_infunc_declare_vars_list
             i = 0
+            
             for key in vars:
                 #BACKHERE
                 var_dec += f"mov qword [rbp - {8*(i+1 + len(arg_list_to_replace))}],0\n" 

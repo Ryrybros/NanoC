@@ -1,49 +1,20 @@
 
-
-main(){
-    int a;
-    a = 2;
-    a = casse_tout(0,1,2,3,4,5,a*2 + 10 , 5*10);
-    print(int, a);
-    int* T;
-    int* T2;
-    int* R;
-    T = malloc(10*8);
-    shuffled(T, 10, 0);
-    print(str, " and ");
-    print_tab(T, 10);
-    a = casse_tout(0,1,2,3,4,5,a*2 + 10 , 5*10);
-    print(int, a);
-
-    return 0;
-}
-
-void print_tab(int* T, int size){
-    int i;
-    i = 0;
-    while(i < size){
-        print(int, *(T + (i*8)));
-        print(str, " , ");
-        i = i +1;
-    }
-    return 0;
-}
-
-
-void shuffled(int* T, int size, int offset){
-    int i;
-    i = 0;
-    while(i < size){
-        T[i] = ( 5-(i + offset))*(i + offset)*( 10-(i + offset)) ;
-        i = i + 1;
-    }
-
+main(int a){
+    int c;
     
-    return 0;
+
+    c = hello(-10);
+    
+    print(int,c);
+    
+    return 0; 
 }
 
 
-int casse_tout(int a, int b, int c, int d, int e, int f, int h , int k){
-    h = h + a + b + c - k;
-    return h;
+int hello(int x){
+    int a;
+    a = 10 + x;
+    x = a +20;
+    a = a*x;
+    return a;
 }
