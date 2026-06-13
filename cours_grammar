@@ -64,7 +64,6 @@ command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | "print" "(" format "," expression ")" ";" -> print
         | "print" "(" "str" "," STRING ")" ";" -> print
         | TYPE NAME ";" -> declaration
-        | TYPE NAME "=" tableau ";" -> declaration_tab
         | func_call ";" -> function_call
         | "return" expression ";" -> return
         | "//" /.+/ -> comment
