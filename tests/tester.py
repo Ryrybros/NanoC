@@ -126,6 +126,10 @@ def test_malloc0():
 def test_malloc_func():
     ret = run("tests/scripts/test_malloc_func")
     assert ret == "5"
+
+def test_merge_sort():
+    ret = run("tests/scripts/test_merge_sort")
+    assert ret == "0 , 36 , 48 , 42 , 24 , 0 , -24 , -42 , -48 , -36 , Final  -48 , -42 , -36 , -24 , 0 , 0 , 24 , 36 , 42 , 48 , ".replace(" ","")
         
 if __name__ == "__main__":
     all_tests = [
@@ -146,7 +150,8 @@ if __name__ == "__main__":
         test_malloc0,
         test_malloc_func,
         test_leftexpr_pt1,
-        test_leftexpr_func1
+        test_leftexpr_func1,
+        test_merge_sort
 
 
 ]

@@ -117,14 +117,16 @@ def registerSaver(parameters : dict, start : bool):
     if start : push_pop = "push"
     else: push_pop = "pop"
     if start:
-        for param in parameters:
+        for param in registers:
+            
+
             ret += f"""
-            push {getRegister(param,variables_dict_len= 0,parameters=list(parameters.keys()))}
+            push {param} ; saving {param}
             """
     else:
-        for param in reversed(parameters):
+        for param in reversed(registers):
             ret += f"""
-            pop {getRegister(param,variables_dict_len= 0,parameters=list(parameters.keys()))}
+            pop {param}
             """
     return ret
 
@@ -238,25 +240,55 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
         ensure_correct_args_func(ast,variable_parameters=variables_dict, function_param_parameters= parameters)
         arg_reg = ""
         arg_script = ""
+        start_arg_script = ""
+        end_arg_script = ""
         end_func_arg_script = ""
         kid_idx = 0
+
 
         index = 0
         for kid in ast.children[0].children[1].children:
             
             arg_script += asm_expression(kid, variables_dict= variables_dict, parameters=parameters)
             if index < 6:
-                arg_script += f"""
+                #Pushes all registers to ensure that they are not lost after func call
+                start_arg_script += f"""
                 push {getRegister(kid, variables_dict_len= len(variables_dict), parameters=ast.children[0].children[1].children, ind=index)}
-                mov {getRegister(kid, variables_dict_len=len(variables_dict), parameters= ast.children[0].children[1].children, ind= index)} , rax
+                
                 """
-            else:
+
                 arg_script += f"""
                 push rax
                 """
+            else:
+                start_arg_script += f"""
+                push rax
+                """
+            
             
             index += 1
         index -= 1
+
+
+
+        index_rev = index
+        for kid in ast.children[0].children[1].children[::-1]:
+            
+            if index_rev < 6:
+                
+                end_arg_script += f"""
+                pop {getRegister(kid, variables_dict_len= len(variables_dict), parameters=ast.children[0].children[1].children, ind=index_rev)}
+                """
+            else:
+                end_arg_script += f"""
+                pop rax
+                mov {getRegister(kid, variables_dict_len= len(variables_dict), parameters=ast.children[0].children[1].children, ind=index_rev)}, rax
+                """
+            
+            index_rev -= 1
+
+
+        
         if index >= 6:
             end_func_arg_script += f""" 
             add rsp, {8*(index - 5)} 
@@ -267,7 +299,7 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
                 pop {getRegister(kid, variables_dict_len=len(variables_dict), parameters=ast.children[0].children[1].children, ind=index)}
                 """
             index -= 1
-        return ";This is a function call\n" + arg_script + "\n" + arg_reg + "\n" + "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
+        return ";This is a function call\n" + start_arg_script + "\n" + arg_script + "\n" + arg_reg + "\n" + end_arg_script + "\n" "call " + ast.children[0].children[0] + ";end_func_call\n" + end_func_arg_script
 
     if ast.data == "bin":
         op = f"{ast.children[1].value}"
@@ -864,12 +896,14 @@ def asm_func(ast):
 
             i = 0
             for key in arg_list_to_replace:
-                print( f"replacing {key} with {getRegister(key, 0 ,arg_list_to_replace)}")
+                # print( f"replacing {key} with {getRegister(key, 0 ,arg_list_to_replace)}")
                 script = script.replace(f"[{key}]", getRegister(key, 0 ,arg_list_to_replace))
                 script = script.replace(f"mov rax, QWORD {key}", f"lea rax, [rbp - {(i+1 + len(arg_list_to_replace))*8}]" )
                 i = i + 1
 
 
+            
+            print(func_types[func_name])
 
             func_script +=  f"""
             ;This is a function
