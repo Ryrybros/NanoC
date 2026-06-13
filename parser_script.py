@@ -62,7 +62,7 @@ def asm_declare_vars(vars : list):
     for var in vars:
         if "[" in vars[var]:
 
-            len = vars[var][vars[var].find("[") + 1]
+            len = vars[var][vars[var].find("[") + 1 : vars[var].find("]")]
             ret += f"""asm_static_tab_{var} times {len} dq 0
             {var} : dq 0\n"""
         else:
@@ -257,13 +257,15 @@ def asm_types_eltab(ast, variables_dict : dict, parameters : dict):
                 # Type du tableau
             if "[" in type_tab:         # Tableau statique
                 i = type_tab.find("[")
-                return type_tab[:i] + type_tab[i+3:]
+                j = type_tab.find("]")
+                return type_tab[:i] + type_tab[j+1:]
             else:                       # Pointeur
                 return type_tab[:-1]
         if ast.data == "tab_tab":   # eltab.data == "tab_tab"
             type_tab = asm_types_eltab(ast.children[0], variables_dict, parameters)
             if "[" in type_tab:         # Tableau statique
-                return type_tab[:-3]
+                i = type_tab.rfind("[")
+                return type_tab[:i]
             else:                       # Pointeur
                 return type_tab[:-1]
         raise AssertionError("Wrong or not implemented", ast)
@@ -420,7 +422,7 @@ def asm_expression(ast, variables_dict :dict , parameters : dict):
 
     if ast.data == "len":
         type_tab = asm_compare_types_expression(ast.children[0], variables_dict, parameters)
-        l = type_tab[type_tab.find("[")+1]
+        l = type_tab[type_tab.find("[")+1 : type_tab.find("]")]
         return f"mov rax, {l}"
 
 
