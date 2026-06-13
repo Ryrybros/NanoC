@@ -33,6 +33,22 @@ def asm_declare_vars_list(ast, vars : dict):
         for i in range(len(ast.children)):
             asm_declare_vars_list( ast.children[i] , vars )
             
+def asm_declare_tab(ast, vars : dict, parameters):
+    if ast.data == "declaration_tab":
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
+        type2 = asm_types_tab(ast.children[1], vars, parameters)
+        if  type1 != type2 :
+            raise TypeError(f"Wrong type assignment cannot assign {type2} to {type1}")  
+        
+        vars[ast.children[1].value] =  ast.children[0].value
+        tab = ast.children[2]
+        decl = f"{ast.children[1].value} : dq "
+        decl += ", ".join(f"{tab.children[i]}" for i in range(len(tab.children)))
+        return decl
+    if ast.data in var_data_rec:
+        #Appel récursif car ça n'est pas une declaration donc il faut itérer plus loin dans l'arbre
+        for i in range(len(ast.children)):
+            asm_declare_tab( ast.children[i] , vars, parameters)
 
 
 
@@ -246,9 +262,9 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
 
 
 def asm_types_eltab(ast, variables_dict : dict, parameters : dict):
-    # Vérifie d'abord si l'expression est bien un entier
-        type_expr = asm_compare_types_expression(ast.children[1], variables_dict, parameters)
-        if type_expr != "int" : raise TypeError(f"Wrong Type {type_expr} not an int")
+# Vérifie d'abord si l'expression est bien un entier
+    type_expr = asm_compare_types_expression(ast.children[1], variables_dict, parameters)
+    if type_expr != "int" : raise TypeError(f"Wrong Type {type_expr} not an int")
         
         # Renvoie le type de l'élément du tableau
         if ast.data == "simple_tab":
@@ -270,6 +286,22 @@ def asm_types_eltab(ast, variables_dict : dict, parameters : dict):
                 return type_tab[:-1]
         raise AssertionError("Wrong or not implemented", ast)
 
+
+def asm_types_tab(ast, variables_dict : dict, parameters : dict):
+# type d'un tableau écrit directement
+    nb_el = len(ast.children)
+    if ast.data == "int_tab":
+        return f"int[{nb_el}]"
+    if ast.data == "var_tab":
+        type1 = variables_dict[ast.children[0].value]
+        for var in ast.children[1:]:
+            type2 = variables_dict[var.value]
+            if type2 != type1:
+                raise TypeError(f"Wrong type {type2} in array of {type1}")
+        return f"{type1}[{nb_el}]"
+    
+    raise AssertionError("Wrong or not implemented", ast)
+    
 
 def asm_expression(ast, variables_dict :dict , parameters : dict):
 
@@ -718,16 +750,73 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         lexpr = asm_lexpression(c, variables_dict, parameters)
         # print(asm_command_assign(c.data, lexpr, rexpr))
         return asm_command_assign(c.data, lexpr, rexpr)
-
-
     
+
+    if ast.data == "assignment_tab":
+        print(ast.pretty())
+        type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
+        type2 = asm_types_tab(ast.children[1], variables_dict, parameters)
+        if  type1 != type2 :
+            raise TypeError(f"Wrong type assignment cannot assign {type2} to {type1}")  
+        
+        l = ast.children[0]
+
+        # Calcul de l'expression de droite
+        if l.data == "dereferencing":
+            lexpr = asm_assign_dereferencing(l.children[0], variables_dict, parameters)
+
+        if l.data == "variable":
+            lexpr = f"mov rax, {l.children[0].value}\n"
+    
+        if l.data == "eltab_write":
+            tpt = tabToPt(l.children[0])
+            lexpr = asm_assign_dereferencing(tpt, variables_dict, parameters)
+
+        lexpr += "mov rax, [rax]"
+        
+        
+        
+        
+        
+        #lexpr = asm_lexpression(ast.children[0], variables_dict, parameters)
+        tab = ast.children[1]
+
+        # res = f"""{lexpr}
+        # mov rax, [rax]\n"""
+
+        res = ""
+
+        if tab.data == "var_tab":
+            for i in range(len(tab.children)):
+                val = asm_expression(tab.children[i], variables_dict, parameters)
+                res += f"""{lexpr}
+                mov rax, rax + 8*{i}
+                push rax
+                {val}
+                pop rbx
+                mov [rbx], rax
+                \n"""
+            return res
+        
+        if tab.data == "int_tab":
+            for i in range(len(tab.children)):
+                val = tab.children[i].value
+                res += f"""{lexpr}
+                add rax, 8*{i}
+                push rax
+                mov rax, {val}
+                pop rbx
+                mov [rbx], rax
+                \n"""
+            return res
+
+
 
     if ast.data == "comment":
         return ""        
 
     if ast.data == "declaration":
         return ""
-         
 
     if ast.data == "sequence":
         
