@@ -49,18 +49,17 @@ given_arglist : (expression "," )* expression |
 return : "return " expression ";" -> return
 if : "if" "(" expression ")" "{" command "}"
 else: "else" "{" command "}"
-for: "for" "(" "int" NAME "=" expression ";" NAME "<" expression ";" NAME"++" ")" "{" command "}"
 command : leftexpression "=" "malloc(" expression ")" ";" -> allocation
         | leftexpression "=" expression ";" -> assignment
         | leftexpression "=" tableau ";" -> assignment_tab
         | leftexpression "=" "&" NAME ";" -> addressing
         | NAME "=" exprstr ";" -> assignement_str
+        | "for" "(" "int" NAME "=" expression ";" NAME "<" expression ";" NAME"++" ")" "{" command "}" -> for
         | command* command -> sequence
         | "pass" ";"    -> pass
         | if else -> if_else
         | if -> if_else
         | "while" "(" expression ")" "{"command"}"  -> while
-        | for -> for
         | "print" "(" format "," expression ")" ";" -> print
         | "print" "(" "str" "," STRING ")" ";" -> print
         | TYPE NAME ";" -> declaration
