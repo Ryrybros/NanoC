@@ -152,6 +152,10 @@ def test_tab3():
     ret = run("tests/scripts/test_tab3")
     assert ret == "20"
 
+def test_tab4():
+    ret = run("tests/scripts/test_tab4")
+    assert ret == "012"
+
 def test_malloc_func():
     ret = run("tests/scripts/test_malloc_func")
     assert ret == "5"
@@ -223,6 +227,7 @@ if __name__ == "__main__":
         test_tab1,
         test_tab2,
         test_tab3,
+        test_tab4,
         test_for,
         test_for2
 ]
