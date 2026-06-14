@@ -302,7 +302,11 @@ def asm_types_tab(ast, variables_dict : dict, parameters : dict):
             type2 = variables_dict[var.value]
             if type2 != type1:
                 raise TypeError(f"Wrong type {type2} in array of {type1}")
-        return f"{type1}[{nb_el}]"
+        if "[" in type1:
+            i = type1.find("[")
+            return f"{type1[:i]}[{nb_el}]{type1[i:]}"
+        else:
+            return f"{type1}[{nb_el}]"
     
     raise AssertionError("Wrong or not implemented", ast)
     
@@ -781,10 +785,11 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         res = ""
 
         if tab.data == "var_tab":
+            print(ast)
             for i in range(len(tab.children)):
-                val = asm_expression(tab.children[i], variables_dict, parameters)
+                val = f"mov rax, [{tab.children[i].value}]"
                 res += f"""{lexpr}
-                mov rax, rax + 8*{i}
+                add rax, 8*{i}
                 push rax
                 {val}
                 pop rbx
@@ -1162,7 +1167,7 @@ def assembly(script):
     l = lark.Lark(gram, start= "start")
     t = l.parse(script)
     # print("assembly", t.pretty())
-    # print(t)
+    #print(t)
     
     asm_script = """extern printf; e.g stdio.h
     extern atoi

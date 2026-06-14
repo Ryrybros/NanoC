@@ -1,0 +1,30 @@
+main(){
+    int*[2] t;
+    int* a;
+    int* b;
+    int ia;
+    int ib;
+    ia = 0;
+    ib = 1;
+    a = &ia;
+    b = &ib;
+    t = [a,b];
+    for(int i = 0; i < len(t); i++)
+    {
+        //print(int, i);
+        int* k;
+        k = t[i];
+        print(int, *k);
+    }
+
+    int[2][2] t2;
+    int[2] ta;
+    int[2] tb;
+    ta = [0,1];
+    tb = [2,3];
+    t2 = [ta,tb];
+
+    print(int, t2[1][0]);
+    
+    return 0; 
+}
