@@ -14,6 +14,7 @@ with open(grammar_path) as f:
 gram = f''' {grammar} '''
 
 var_data_rec = ( 'parameter',   'sequence', 'if_else', 'while', "main", "start")
+forbidden_names = ('malloc', 'print', 'int', 'main', 'str', 'asm_ret_msg', 'argv', 'asm_int_prtr')
 
 cpt_if_while = [-1]
 
@@ -214,6 +215,9 @@ def asm_compare_types_expression(ast, variables_dict : dict, parameters: dict):
             
             if not(k in variables_dict.keys()):
                 raise ValueError(f"Not defined variable {k}")
+            
+            if k in forbidden_names or "asm_static_tab_" in k:
+                raise ValueError(f"Cannot name a variable {k}, it is a system variable")
             
             return variables_dict[k]
         return "int"
@@ -821,7 +825,13 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         if "int[" in ast.children[0]:
             if current_function[0] != "main": raise ValueError("Cannot initialize a static tab in function other than main")
 
+        if ast.children[1] in forbidden_names or "asm_static_tab_" in ast.children[1]:
+                raise ValueError(f"Cannot name a variable {ast.children[1]}, it is a system variable")
+            
+
         return ""
+    
+        
 
     if ast.data == "sequence":
 
@@ -1076,6 +1086,11 @@ def asm_func(ast):
     for child in ast.children:
         if child.data == "function":
             func_name = child.children[1].value
+            
+            if func_name in forbidden_names or "asm_static_tab_" in func_name:
+                raise ValueError(f"Cannot name a variable {func_name}, it is a system function")
+            
+
             current_function[0] = func_name
             
             if not asm_ensure_return(child.children[3]) : raise TypeError(f"No return in at least one branch of function {func_name} of type {func_types[func_name]} if the type is void add return 0 to declare end of the function ")
