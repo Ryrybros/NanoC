@@ -10,6 +10,7 @@ Several tests for the different features are proposed in the scripts in tests/sc
 
 The compiler forbids the user to do many of the unallowed operations. It especially checks the types of the variables and expressions and raise a TypeError when these types are not compatible.
 
+Some variables are already defined by the compiler and can't be used by the user: malloc, print, int, main, str, asm_ret_msg, argv, asm_int_prtr, asm_static_tab_{var} where var is a static array.
 
 
 **Arithmetic:**
