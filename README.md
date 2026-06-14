@@ -135,7 +135,7 @@ Example:
         return 0;
     }
 
-
+The pointers declared in functions (main included) are automatically deallocated at the end of the scope of the function. 
 
 
 **Arrays:**
