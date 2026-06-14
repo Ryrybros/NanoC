@@ -155,6 +155,11 @@ def test_func_8args():
     ret = run("tests/scripts/test_func_8args")
     assert ret == "-33 and 0 , 36 , 48 , 42 , 24 , 0 , -24 , -42 , -48 , -36 , -103".replace(" ", "")
 
+def test_for():
+    ret = run("tests/scripts/test_for")
+    assert ret == "012345678910"
+
+
 if __name__ == "__main__":
     all_tests = [
         test_basique0,
@@ -180,7 +185,8 @@ if __name__ == "__main__":
         test_tab0,
         test_tab1,
         test_tab2,
-        test_tab3
+        test_tab3,
+        test_for
 ]
     t = 1
     for test in all_tests:

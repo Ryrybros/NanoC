@@ -13,7 +13,7 @@ with open(grammar_path) as f:
 
 gram = f''' {grammar} '''
 
-var_data_rec = ( 'parameter',   'sequence', 'if_else', 'while',  "main", "start")
+var_data_rec = ( 'parameter',   'sequence', 'if_else', 'while', "main", "start")
 
 cpt_if_while = [-1]
 
@@ -28,11 +28,12 @@ def asm_declare_vars_list(ast, vars : dict):
         return
     if ast.data in var_data_rec:
         #Appel récursif car ça n'est pas une declaration donc il faut itérer plus loin dans l'arbre
-        
-        
         for i in range(len(ast.children)):
             asm_declare_vars_list( ast.children[i] , vars )
-            
+    if ast.data == "for":
+        asm_declare_vars_list(ast.children[5], vars)
+
+
 def asm_declare_tab(ast, vars : dict, parameters):
     if ast.data == "declaration_tab":
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
@@ -150,6 +151,7 @@ def registerSaver(parameters : dict, start : bool):
     if start : push_pop = "push"
     else: push_pop = "pop"
     if start:
+        ret += f"""push r11"""
         for param in registers:
             
 
@@ -161,6 +163,8 @@ def registerSaver(parameters : dict, start : bool):
             ret += f"""
             pop {param}
             """
+        ret += f"""pop r11"""
+
     return ret
 
 def getRegister(arg : str , variables_dict_len: int ,parameters : list, ind : int = None):
@@ -754,7 +758,6 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
     
 
     if ast.data == "assignment_tab":
-        print(ast.pretty())
         type1 = asm_compare_types_expression(ast.children[0], variables_dict= variables_dict, parameters=parameters)
         type2 = asm_types_tab(ast.children[1], variables_dict, parameters)
         if  type1 != type2 :
@@ -774,17 +777,7 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
             lexpr = asm_assign_dereferencing(tpt, variables_dict, parameters)
 
         lexpr += "mov rax, [rax]"
-        
-        
-        
-        
-        
-        #lexpr = asm_lexpression(ast.children[0], variables_dict, parameters)
         tab = ast.children[1]
-
-        # res = f"""{lexpr}
-        # mov rax, [rax]\n"""
-
         res = ""
 
         if tab.data == "var_tab":
@@ -820,7 +813,7 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         return ""
 
     if ast.data == "sequence":
-        
+
         command = asm_command(ast.children[0], variables_dict=variables_dict , parameters= parameters)
         following = asm_command(ast.children[1], variables_dict= variables_dict,  parameters= parameters)
 
@@ -976,6 +969,55 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         pop rbp     
         ret
         """
+    
+
+    if ast.data == 'for':
+        #print(ast.pretty())
+        ind = ast.children[0].value
+        temp_var_dict = variables_dict
+        temp_var_dict[f"{ind}"] = "int"
+        if ast.children[2] != ind or ast.children[4] != ind:
+            raise ValueError(f"{ind}, {ast.children[2]} et {ast.children[4]} n'ont pas le même nom")
+        type_expr1 = asm_compare_types_expression(ast.children[1], temp_var_dict, parameters)
+        type_expr2 = asm_compare_types_expression(ast.children[3], temp_var_dict, parameters)
+        if type_expr1 != "int":
+            raise TypeError(f"{type_expr1} n'est pas de type entier")
+        if type_expr2 != "int":
+            raise TypeError(f"{type_expr2} n'est pas de type entier")
+        
+        init = asm_expression(ast.children[1], temp_var_dict, parameters)
+        end = asm_expression(ast.children[3], temp_var_dict, parameters)
+
+        command = asm_command(ast.children[5], temp_var_dict, parameters)
+        command = command.replace(f"[asm_temporary_var_{ind}]", "r11")
+        command = command.replace(f"[{ind}]", "r11")
+
+        cpt_if_while[0] += 1
+
+        res = f"""{init}
+        mov r11, rax
+        for_{cpt_if_while[0]}:
+        {end}
+        push rax
+        mov rax, r11
+        pop rbx
+        cmp rax, rbx
+        jge end_for_{cpt_if_while[0]}
+
+        {command}
+
+        mov rax, 1
+        push rax
+        mov rax, r11
+        pop rbx
+        add rax, rbx
+        mov r11, rax
+        
+        jmp for_{cpt_if_while[0]}
+        end_for_{cpt_if_while[0]}:
+        """
+
+        return res
 
     raise AssertionError("Wrong or not implemented", ast)
 
