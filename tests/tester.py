@@ -167,6 +167,19 @@ def test_merge_sort_tab():
 def test_dicho_search():
     ret = run("tests/scripts/test_dicho_search") 
     assert ret == "0 , 36 , 48 , 42 , 24 , 0 , -24 , -42 , -48 , -36 , Final  -48 , -42 , -36 , -24 , 0 , 0 , 24 , 36 , 42 , 48 , Look for 24 :  1 ,  10 : 0".replace(" ", "")
+
+def test_mat0():
+    ret = run("tests/scripts/test_mat0") 
+
+    assert ret == f"""0 , 1 , 2 , 
+10 , 11 , 12 , 
+-5 , -4 , -3 , 
+
+0 , 3 , 6 , 
+50 , 83 , 116 , 
+-25 , -37 , -49 , 
+""".replace(" ", "").replace("\n","")
+
 def test_func_8args():
     ret = run("tests/scripts/test_func_8args")
     assert ret == "-33 and 0 , 36 , 48 , 42 , 24 , 0 , -24 , -42 , -48 , -36 , -103".replace(" ", "")
@@ -196,6 +209,7 @@ if __name__ == "__main__":
         test_merge_sort,
         test_merge_sort_tab,
         test_dicho_search,
+        test_mat0,
         test_tab0,
         test_tab1,
         test_tab2,

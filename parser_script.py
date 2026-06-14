@@ -660,7 +660,7 @@ def asm_command_assign(assign_catego, lexpr, rexpr):
             {lexpr}
             """
 
-    if assign_catego == "dereferencing":
+    if assign_catego in ("dereferencing", "eltab_write") :
         return f"""
             {lexpr}
             push rax
@@ -669,9 +669,11 @@ def asm_command_assign(assign_catego, lexpr, rexpr):
             mov [rbx] , rax
             """
 
+
+    
     
 
-    raise AssertionError("Wrong or not implemented", ast)
+    raise AssertionError(f"Wrong or not implemented : {assign_catego}")
 
 
 
@@ -877,21 +879,30 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
         if type(ast.children[0]) == lark.lexer.Token:
             
             if ast.children[0].type == "STRING" :
+                
                 string = ast.children[0].value
-                offset = len(string) % 8
-                chunks = [string[1:-1][i:i+8] for i in range(0, len(string), 8)]
-                
-                allocation = ""
-                
-                for chunk in chunks[::-1]:
-                    chunk = chunk[::-1]
-                    
-                    allocation += f"""
 
-                    mov rax, 0x{chunk.encode().hex().zfill(16).upper()}
+                if string[1:-1] == "endl" :
+                    allocation = f"""
+                    mov rax, 0x0A
                     push rax 
-
                     """
+                    chunks = [string]
+                else:
+                    offset = len(string) % 8
+                    chunks = [string[1:-1][i:i+8] for i in range(0, len(string), 8)]
+                    
+                    allocation = ""
+                    
+                    for chunk in chunks[::-1]:
+                        chunk = chunk[::-1]
+                        
+                        allocation += f"""
+
+                        mov rax, 0x{chunk.encode().hex().zfill(16).upper()}
+                        push rax 
+
+                        """
                 return  f"""
                     
                     
