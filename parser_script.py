@@ -901,11 +901,11 @@ def asm_command(ast, variables_dict : dict , parameters : dict):
 
 
                     {allocation}
-
+                    mov rax, rsp
                     {registerSaver(parameters,True)}
 
                     push rax
-                    mov rdi, rsp
+                    mov rdi, rax
                     xor rax, rax
                     call printf
                     pop rax
