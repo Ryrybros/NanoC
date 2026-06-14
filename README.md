@@ -56,27 +56,27 @@ Functions can be recursive.
 They can return int , tables and pointers of all type
 
 Example :
+                
         
-
-int fib(int n){
-    
-    if(n < 2){
-        return n ;
-    }else{
-        return fib(n - 2) + fib(n - 1);
-    }
-}
-
-main(){
-    int c ;
-    c = 10;
-    c = fib(c);
-    
-    
-    print(int,c);
-    
-    return 0; 
-}
+        int fib(int n){
+            
+            if(n < 2){
+                return n ;
+            }else{
+                return fib(n - 2) + fib(n - 1);
+            }
+        }
+        
+        main(){
+            int c ;
+            c = 10;
+            c = fib(c);
+            
+            
+            print(int,c);
+            
+            return 0; 
+        }
 
 
 **
@@ -93,39 +93,39 @@ The types of the language are int , int[1] , int[2] ,int*, int** ,... int[n] , i
 It is not possible to do binary operations between 2 different types.
 except for :
 Pointer arithmetic is allowed : example : *(p + 8) returns the value at p with an offset of 8 (size of an int)
-Example :
-main(){
-    int* T;
-    int s;
-    s = 5;
-    T = malloc(s*8);
-    standard(T, s);
-    print_tab(T, s);
-    return 0;
-}
-
-void print_tab(int* T, int size){
-    int i;
-    i = 0;
-    while(i < size){
-        print(int, *(T + (i*8)));
-        print(str, " , ");
-        i = i +1;
-    }
-    return 0;
-}
-
-void standard(int* T, int size){
-    int i;
-    i = 0;
-    while(i < size){
-        *(T + (i*8)) = i*10;
-        i = i + 1;
-    }
-
-    
-    return 0;
-}
+        Example :
+        main(){
+            int* T;
+            int s;
+            s = 5;
+            T = malloc(s*8);
+            standard(T, s);
+            print_tab(T, s);
+            return 0;
+        }
+        
+        void print_tab(int* T, int size){
+            int i;
+            i = 0;
+            while(i < size){
+                print(int, *(T + (i*8)));
+                print(str, " , ");
+                i = i +1;
+            }
+            return 0;
+        }
+        
+        void standard(int* T, int size){
+            int i;
+            i = 0;
+            while(i < size){
+                *(T + (i*8)) = i*10;
+                i = i + 1;
+            }
+        
+            
+            return 0;
+        }
 
 
 
