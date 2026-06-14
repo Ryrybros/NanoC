@@ -189,6 +189,10 @@ def test_for():
     assert ret == "012345678910"
 
 
+def test_for2():
+    ret = run("tests/scripts/test_for2")
+    assert ret == "0 , 36 , 48 , ".replace(" ","")
+
 if __name__ == "__main__":
     all_tests = [
         test_basique0,
@@ -219,7 +223,8 @@ if __name__ == "__main__":
         test_tab1,
         test_tab2,
         test_tab3,
-        test_for
+        test_for,
+        test_for2
 ]
     t = 1
     for test in all_tests:
