@@ -51,7 +51,3 @@ void shuffled(int* T, int size, int offset){
 
 
 
-
-
-
-

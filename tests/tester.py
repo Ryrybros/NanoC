@@ -197,6 +197,18 @@ def test_for2():
     ret = run("tests/scripts/test_for2")
     assert ret == "0 , 36 , 48 , ".replace(" ","")
 
+def test_failure0():
+    ret = run("tests/scripts/failure0")
+    assert ret == "0"
+
+def test_success_of_failure():
+    ret = run("tests/scripts/success_of_failure")
+    assert ret == "3"
+
+def test_weakness0():
+    ret = run("tests/scripts/weakness0")
+    assert ret == "0"
+
 if __name__ == "__main__":
     all_tests = [
         test_basique0,
@@ -229,7 +241,10 @@ if __name__ == "__main__":
         test_tab3,
         test_tab4,
         test_for,
-        test_for2
+        test_for2,
+        test_weakness0,
+        test_success_of_failure,
+        test_failure0
 ]
     t = 1
     for test in all_tests:

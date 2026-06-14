@@ -1,0 +1,24 @@
+
+
+main(){
+    int** p1;
+    int* b;
+    b = malloc(8);
+    *b = 3;
+    p1 = f1(b);
+    print(int, **p1);
+    
+    return 0;
+}
+
+
+int** f1(int* b1){
+
+    // Exemple illustrant que avec le malloc, la portée des adresses est bonne, contrairement à l'opérateur &
+    int** p;
+    p = malloc(8);
+    *p = b1;
+
+
+    return p;
+}
